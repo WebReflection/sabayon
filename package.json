@@ -1,0 +1,24 @@
+{
+  "name": "sabayon",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "",
+    "server": "static-handler ."
+  },
+  "keywords": [
+    "SharedArrayBuffer",
+    "polyfill"
+  ],
+  "author": "Andrea Giammarchi",
+  "license": "MIT",
+  "description": "SharedArrayBuffer always on",
+  "devDependencies": {
+    "static-handler": "^0.4.3"
+  },
+  "type": "module",
+  "exports": {
+    "./main": "./esm/main.js",
+    "./worker": "./esm/worker.js",
+    "./package.json": "./package.json"
+  }
+}
