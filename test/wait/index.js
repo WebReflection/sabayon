@@ -1,15 +1,17 @@
 import {
-  Int32Array,
-  SharedArrayBuffer,
+  Atomics,
   Worker,
-  waitAsync,
-  notify,
-} from '../../esm/main.js';
+} from '../../worker-main/main.js';
 
 const w = new Worker('./worker.js', { type: 'module', serviceWorker: './sw.js' });
 
 w.addEventListener('message', event => {
-  event.data[0] = 1;
-  notify(event.data, 0);
+  const { data } = event;
+  if (typeof data === 'string')
+    document.body.textContent = data;
+  else {
+    console.log('Main', data);
+    data.view[0] = 1;
+    Atomics.notify(data.view, 0);
+  }
 });
-

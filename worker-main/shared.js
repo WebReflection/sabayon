@@ -4,11 +4,12 @@ const ACTION_NOTIFY = 2;
 const ACTION_WAIT = 3;
 const ACTION_SW = 4;
 
-const { ArrayBuffer } = globalThis;
+const { ArrayBuffer, Atomics: $Atomics } = globalThis;
 const { isArray } = Array;
-const { getPrototypeOf, values } = Object;
+const { create, getPrototypeOf, values } = Object;
 
 const TypedArray = getPrototypeOf(Int32Array);
+const Atomics = create($Atomics);
 
 const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, data) =>
   currentTarget.dispatchEvent(new MessageEvent(type, { data, origin, lastEventId, source, ports }));
@@ -73,12 +74,12 @@ const transferViews = (data, transfer) => {
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/waitAsync#browser_compatibility
-const waitAsyncPatch = (buffer, index) => ({
+const waitAsyncPatch = (...args) => ({
   value: new Promise(resolve => {
     // encodeURIComponent('onmessage=e=>postMessage(!Atomics.wait(...e.data))')
     let w = new Worker('data:application/javascript,onmessage%3De%3D%3EpostMessage(!Atomics.wait(...e.data))');
     w.onmessage = () => resolve('ok');
-    w.postMessage([buffer, index]);
+    w.postMessage(args);
   })
 });
 
@@ -102,7 +103,7 @@ const actionNotify = (_view, _id, _index) => {
 
 const actionWait = (event, transfer, data) => {
   for (const [view, id] of transfer)
-    transferred.set(view, id);
+    transferred.set(view, [id, event.currentTarget]);
   dispatch(event, data);
 };
 
@@ -112,18 +113,21 @@ const postData = (CHANNEL, data) => {
   return transfer.size ? [CHANNEL, ACTION_WAIT, transfer, data] : data;
 };
 
+const getData = view => {
+  if (!transferred.has(view)) throw new TypeError('Unable to notify this view');
+  return transferred.get(view);
+};
+
 export {
-  ACTION_INIT,
-  ACTION_READY,
-  ACTION_NOTIFY,
-  ACTION_WAIT,
-  ACTION_SW,
-  ArrayBuffer,
-  isArray, isChannel, isObject,
-  views, extend,
-  ignoreDirect, ignorePatch,
-  transferred, transferViews,
-  dispatch, postData,
+  ACTION_INIT, ACTION_READY, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
+
+  ArrayBuffer, Atomics,
+
   actionNotify, actionWait,
+  getData, postData,
+  ignoreDirect, ignorePatch,
   waitAsyncPatch, waitAsyncPoly,
+
+  extend,
+  isChannel,
 };

@@ -1,9 +1,15 @@
 import {
-  ACTION_NOTIFY, ACTION_WAIT, ACTION_INIT,
-  extend, isChannel, actionWait, actionNotify, transferred,
+  ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT,
+
+  ArrayBuffer, Atomics,
+
+  actionNotify, actionWait,
+  getData, postData,
   ignoreDirect, ignorePatch,
-  waitAsyncPatch, postData,
-  waitAsyncPoly,
+  waitAsyncPatch, waitAsyncPoly,
+
+  extend,
+  isChannel,
 } from './shared.js';
 
 let {
@@ -12,19 +18,16 @@ let {
   postMessage,
 } = globalThis;
 
-let {
-  notify,
-  wait,
-  waitAsync,
-} = Atomics;
-
 let ignore = ignoreDirect;
 
 const ready = Promise.withResolvers();
 
 try {
   new SharedArrayBuffer(4);
-  if (!waitAsync) waitAsync = waitAsyncPatch;
+
+  if (!Atomics.waitAsync)
+    Atomics.waitAsync = waitAsyncPatch;
+
   ready.resolve();
 }
 catch (_) {
@@ -37,11 +40,11 @@ catch (_) {
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
   ignore = ignorePatch;
-  waitAsync = waitAsyncPoly;
 
-  notify = (view, index) => {
-    if (!transferred.has(view)) throw new TypeError('Unable to notify this view');
-    $postMessage([CHANNEL, ACTION_NOTIFY, view, transferred.get(view), index]);
+  Atomics.waitAsync = waitAsyncPoly;
+  Atomics.notify = (view, index) => {
+    const [id] = getData(view);
+    $postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
     return 0;
   };
 
@@ -77,9 +80,7 @@ await ready.promise;
 export {
   /** @type {globalThis.Int32Array} */ Int32Array,
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
-  /** @type {globalThis.Atomics.notify} */ notify,
-  /** @type {globalThis.Atomics.wait} */ wait,
-  /** @type {globalThis.Atomics.waitAsync} */ waitAsync,
+  /** @type {globalThis.Atomics} */ Atomics,
   /** @type {globalThis.postMessage} */ postMessage,
   ignore,
 };

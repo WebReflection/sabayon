@@ -1,8 +1,16 @@
-import { SharedArrayBuffer, Int32Array, postMessage, wait } from '../../esm/worker.js';
+import {
+  Atomics,
+  Int32Array,
+  SharedArrayBuffer,
+  postMessage,
+} from '../../worker-main/worker.js';
 
 const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
 
-postMessage(view);
-wait(view, 0);
-console.log([...view]);
+postMessage({ some: 'value', view });
+
+Atomics.wait(view, 0);
+
+console.assert(view[0] === 1);
+postMessage('ok');
