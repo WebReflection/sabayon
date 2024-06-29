@@ -1,10 +1,17 @@
 import {
+  ACTION_INIT,
+  ACTION_READY,
+  ACTION_NOTIFY,
+  ACTION_WAIT,
+  ACTION_SW,
   ArrayBuffer,
-  isArray, isObject,
+  isChannel, isObject,
   views, extend,
   ignoreDirect, ignorePatch,
   transferred, transferViews,
-  dispatch,
+  dispatch, postData,
+  actionNotify, actionWait,
+  waitAsyncPatch, waitAsyncPoly,
 } from './shared.js';
 
 let {
@@ -25,41 +32,19 @@ try {
   new SharedArrayBuffer(4);
 
   // except for Firefox ...
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/waitAsync#browser_compatibility
-  if (!waitAsync) {
-    waitAsync = (buffer, index) => ({
-      value: new Promise(resolve => {
-        // encodeURIComponent('onmessage=e=>postMessage(!Atomics.wait(...e.data))')
-        let w = new Worker('data:application/javascript,onmessage%3De%3D%3EpostMessage(!Atomics.wait(...e.data))');
-        w.onmessage = () => resolve('ok');
-        w.postMessage([buffer, index]);
-      })
-    });
-  }
+  if (!waitAsync) waitAsync = waitAsyncPatch;
 }
 catch (_) {
   const CHANNEL = crypto.randomUUID();
-
-  const { prototype: { postMessage }} = Worker;
 
   const addListener = (self, type, handler, ...rest) => {
     self.addEventListener(type, handler, ...rest);
   };
 
-  const isChannel = event => {
-    const { data } = event;
-    const yes = isArray(data) && data.at(0) === CHANNEL;
-    if (yes) {
-      event.stopImmediatePropagation();
-      event.preventDefault();
-    }
-    return yes;
-  };
-
   const register = ({ serviceWorker: s }, sw, done) => {
     let w;
     addListener(s, 'message', event => {
-      if (isChannel(event)) {
+      if (isChannel(event, CHANNEL)) {
         w.postMessage([ CHANNEL ]);
       }
     });
@@ -77,13 +62,7 @@ catch (_) {
   const sync = { then: $ => $() };
 
   ignore = ignorePatch;
-
-  waitAsync = (view, index) => {
-    const value = views.get(view);
-    if (!isArray(value)) throw new TypeError('Unable to waitAsync this view');
-    value[1] = index;
-    return { value: value[2].promise };
-  };
+  waitAsync = waitAsyncPoly;
 
   SharedArrayBuffer = class extends ArrayBuffer {}
   Int32Array = extend(Int32Array, SharedArrayBuffer);
@@ -99,58 +78,45 @@ catch (_) {
           register(navigator, sw, resolve);
           serviceWorkers.set(sw, promise);
         }
-        services.set(this, serviceWorkers.get(sw).then(() => {
-          postMessage.call(this, [CHANNEL, 'ready']);
-        }));
+        services.set(
+          this,
+          serviceWorkers.get(sw).then(
+            () => super.postMessage([CHANNEL, ACTION_READY])
+          )
+        );
       }
       else {
         services.set(this, sync);
       }
       addListener(this, 'message', event => {
-        if (isChannel(event)) {
+        if (isChannel(event, CHANNEL)) {
           const [_, action, ...rest] = event.data;
           switch (action) {
-            case 'notify': {
-              const [_view, _id, _index] = rest;
-              for (const [view, [id, index, { resolve }]] of views) {
-                if (_id === id && _index === index) {
-                  for (let i = 0; i < _view.length; i++) view[i] = _view[i];
-                  views.delete(view);
-                  resolve('ok');
-                  break;
-                }
-              }
+            case ACTION_NOTIFY: {
+              actionNotify(...rest);
               break;
             }
-            case 'wait': {
-              const [transfer, object] = rest;
-              for (const [view, id] of transfer)
-                transferred.set(view, id);
-              dispatch(event, object);
+            case ACTION_WAIT: {
+              actionWait(event, ...rest);
               break;
             }
             default:
-              throw new TypeError(action);
+              throw new TypeError(`Unknown action: ${action}`);
           }
         }
       });
-      postMessage.call(this, [CHANNEL, sw]);
+      super.postMessage([CHANNEL, sw]);
     }
     postMessage(data, ...rest) {
-      services.get(this).then(() => {
-        const transfer = new Map;
-        if (isObject(data)) transferViews(data, transfer);
-        postMessage.call(
-          this,
-          transfer.size ? [CHANNEL, 'wait', transfer, data] : data,
-          ...rest
-        );
-      });
+      services.get(this).then(() => super.postMessage(
+        postData(CHANNEL, data),
+        ...rest
+      ));
     }
   }
 
   addListener(globalThis, 'message', event => {
-    if (isChannel(event)) {
+    if (isChannel(event, CHANNEL)) {
       console.log(event.data);
     }
   });

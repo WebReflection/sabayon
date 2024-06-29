@@ -10,9 +10,8 @@ const { getPrototypeOf, values } = Object;
 
 const TypedArray = getPrototypeOf(Int32Array);
 
-const dispatch = ({ type, origin, lastEventId, source, ports }, data) => dispatchEvent(
-  new MessageEvent(type, { data, origin, lastEventId, source, ports })
-);
+const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, data) =>
+  currentTarget.dispatchEvent(new MessageEvent(type, { data, origin, lastEventId, source, ports }));
 
 let id = 0;
 const views = new Map;
@@ -120,7 +119,7 @@ export {
   ACTION_WAIT,
   ACTION_SW,
   ArrayBuffer,
-  isChannel, isObject,
+  isArray, isChannel, isObject,
   views, extend,
   ignoreDirect, ignorePatch,
   transferred, transferViews,

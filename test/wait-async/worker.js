@@ -1,4 +1,4 @@
-import { notify } from '../../esm/worker.js';
+import { notify } from '../../main-worker/worker.js';
 
 addEventListener('message', event => {
   const { data } = event;

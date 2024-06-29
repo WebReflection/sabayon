@@ -1,3 +1,9 @@
+const ACTION_INIT = 0;
+const ACTION_READY = 1;
+const ACTION_NOTIFY = 2;
+const ACTION_WAIT = 3;
+const ACTION_SW = 4;
+
 const { isArray } = Array;
 const { join } = Array.prototype;
 
@@ -33,7 +39,7 @@ addEventListener('fetch', event => {
       const uid = `${CHANNEL}-${id}`;
       transactions.set(uid, [index, waited]);
       for (const client of await clients.matchAll())
-        client.postMessage([CHANNEL, 'sw', id, index]);
+        client.postMessage([CHANNEL, ACTION_SW, id, index]);
       return waited.promise.then(value => new Response(
         `[${join.call(value, ',')}]`,
         r.headers,
