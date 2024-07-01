@@ -42,6 +42,9 @@ catch (_) {
   const $postMessage = postMessage;
   const $addEventListener = addEventListener;
 
+  const trap = ({ currentTarget, type, origin, lastEventId, source, ports }) =>
+    ({ currentTarget, type, origin, lastEventId, source, ports });
+
   const messages = [];
 
   let CHANNEL = '';
@@ -94,7 +97,7 @@ catch (_) {
           const [transfer, data] = rest;
           actionWait(event, transfer, data);
           if (bootstrapping)
-            messages.push([event, data]);
+            messages.push([trap(event), data]);
           break;
         }
         case ACTION_SW: {

@@ -5,7 +5,7 @@ import {
   Worker,
 } from '../../dist/main.js';
 
-const w = new Worker('./worker.js', { type: 'module', no_serviceWorker: '../sw.js' });
+const w = new Worker('./worker.js', { type: 'module', serviceWorker: '../sw.js' });
 const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
 
