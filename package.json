@@ -1,6 +1,6 @@
 {
   "name": "sabayon",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "rollup --config rollup.js",
     "server": "static-handler ."
