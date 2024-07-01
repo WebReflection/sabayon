@@ -87,10 +87,9 @@ const waitAsyncPatch = (...args) => ({
 });
 
 const waitAsyncPoly = (view, index) => {
-  const value = views.get(view);
-  if (!isArray(value)) throw new TypeError('Unable to waitAsync this view');
+  const value = views.get(view), [id, _, { promise }] = value;
   value[1] = index;
-  return [value[0], value[2].promise];
+  return [id, promise];
 };
 
 const actionNotify = (_view, _id, _index) => {
@@ -116,10 +115,7 @@ const postData = (CHANNEL, data) => {
   return transfer.size ? [CHANNEL, ACTION_WAIT, transfer, data] : data;
 };
 
-const getData = view => {
-  if (!transferred.has(view)) throw new TypeError('Unable to notify this view');
-  return transferred.get(view);
-};
+const getData = view => transferred.get(view);
 
 export {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
@@ -131,6 +127,7 @@ export {
   ignoreDirect, ignorePatch,
   waitAsyncPatch, waitAsyncPoly,
 
+  dispatch,
   extend,
   isChannel,
   views,

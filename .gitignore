@@ -3,4 +3,3 @@
 v8.log
 coverage/
 node_modules/
-dist/*

@@ -10,6 +10,7 @@ import {
   ignoreDirect, ignorePatch,
   waitAsyncPatch, waitAsyncPoly,
 
+  dispatch,
   extend,
   isChannel,
   views,
@@ -19,10 +20,12 @@ import {
 let {
   Int32Array,
   SharedArrayBuffer,
+  addEventListener,
   postMessage,
 } = globalThis;
 
 let ignore = ignoreDirect;
+let bootstrapping = true;
 
 const ready = withResolvers();
 
@@ -37,6 +40,9 @@ try {
 catch (_) {
   const { stringify, parse } = JSON;
   const $postMessage = postMessage;
+  const $addEventListener = addEventListener;
+
+  const messages = [];
 
   let CHANNEL = '';
   let SERVICE_WORKER = '';
@@ -70,9 +76,7 @@ catch (_) {
     return 'ok';
   };
 
-  postMessage = (data, ...rest) => $postMessage(postData(CHANNEL, data), ...rest);
-
-  addEventListener('message', event => {
+  $addEventListener('message', event => {
     if (isChannel(event, CHANNEL)) {
       const [_, ACTION, ...rest] = event.data;
       switch (ACTION) {
@@ -87,26 +91,40 @@ catch (_) {
           break;
         }
         case ACTION_WAIT: {
-          actionWait(event, ...rest);
+          const [transfer, data] = rest;
+          actionWait(event, transfer, data);
+          if (bootstrapping)
+            messages.push([event, data]);
           break;
         }
         case ACTION_SW: {
           ready.resolve();
           break;
         }
-        default:
-          throw new TypeError(`Unknown action: ${ACTION}`);
       }
     }
   });
+
+  addEventListener = (type, ...args) => {
+    $addEventListener(type, ...args);
+    if (type === 'message') {
+      for (const args of messages.splice(0))
+        dispatch(...args);
+    }
+  };
+
+  postMessage = (data, ...rest) => $postMessage(postData(CHANNEL, data), ...rest);
 }
 
 await ready.promise;
 
+bootstrapping = false;
+
 export {
+  /** @type {globalThis.Atomics} */ Atomics,
   /** @type {globalThis.Int32Array} */ Int32Array,
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
-  /** @type {globalThis.Atomics} */ Atomics,
+  /** @type {globalThis.addEventListener} */ addEventListener,
   /** @type {globalThis.postMessage} */ postMessage,
   ignore,
 };

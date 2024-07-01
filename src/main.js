@@ -114,8 +114,6 @@ catch (_) {
               clearTimeout(timer);
               break;
             }
-            default:
-              throw new TypeError(`Unknown action: ${ACTION}`);
           }
         }
       });
@@ -127,9 +125,9 @@ catch (_) {
 }
 
 export {
+  /** @type {globalThis.Atomics} */ Atomics,
   /** @type {globalThis.Int32Array} */ Int32Array,
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
   /** @type {globalThis.Worker} */ Worker,
-  /** @type {globalThis.Atomics} */ Atomics,
   ignore,
 };

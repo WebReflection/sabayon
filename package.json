@@ -2,7 +2,7 @@
   "name": "sabayon",
   "version": "0.0.2",
   "scripts": {
-    "build": "rollup --config rollup.js",
+    "build": "rollup --config rollup.js && cp dist/sw.js test/wait/sw.js && cp dist/sw.js test/sw.js",
     "server": "static-handler ."
   },
   "keywords": [
@@ -23,6 +23,7 @@
     "./main": "./src/main.js",
     "./worker": "./src/worker.js",
     "./sw": "./src/sw.js",
+    "./sw-listeners": "./src/sw-listeners.js",
     "./package.json": "./package.json"
   }
 }

@@ -3,9 +3,9 @@ import {
   Int32Array,
   SharedArrayBuffer,
   Worker,
-} from '../../src/main.js';
+} from '../../dist/main.js';
 
-const w = new Worker('./worker.js', { type: 'module' });
+const w = new Worker('./worker.js', { type: 'module', serviceWorker: '../sw.js' });
 const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
 

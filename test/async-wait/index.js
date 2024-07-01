@@ -1,9 +1,9 @@
 import {
   Atomics,
   Worker,
-} from '../../src/main.js';
+} from '../../dist/main.js';
 
-const w = new Worker('./worker.js', { type: 'module' });
+const w = new Worker('./worker.js', { type: 'module', serviceWorker: '../sw.js' });
 
 w.addEventListener('message', event => {
   const { data } = event;
