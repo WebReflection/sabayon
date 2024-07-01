@@ -1,10 +1,9 @@
 const ACTION_INIT = 0;
-const ACTION_READY = 1;
-const ACTION_NOTIFY = 2;
-const ACTION_WAIT = 3;
-const ACTION_SW = 4;
+const ACTION_NOTIFY = 1;
+const ACTION_WAIT = 2;
+const ACTION_SW = 3;
 
-const { ArrayBuffer, Atomics: $Atomics } = globalThis;
+const { ArrayBuffer, Atomics: $Atomics, Promise } = globalThis;
 const { isArray } = Array;
 const { create, getPrototypeOf, values } = Object;
 
@@ -14,13 +13,15 @@ const Atomics = create($Atomics);
 const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, data) =>
   currentTarget.dispatchEvent(new MessageEvent(type, { data, origin, lastEventId, source, ports }));
 
+const withResolvers = () => Promise.withResolvers();
+
 let id = 0;
 const views = new Map;
 const extend = (Class, SharedArrayBuffer) => class extends Class {
   constructor(value, ...rest) {
     super(value, ...rest);
     if (value instanceof SharedArrayBuffer)
-      views.set(this, [id++, 0, Promise.withResolvers()]);
+      views.set(this, [id++, 0, withResolvers()]);
   }
 };
 
@@ -87,7 +88,7 @@ const waitAsyncPoly = (view, index) => {
   const value = views.get(view);
   if (!isArray(value)) throw new TypeError('Unable to waitAsync this view');
   value[1] = index;
-  return { value: value[2].promise };
+  return [value[0], value[2].promise];
 };
 
 const actionNotify = (_view, _id, _index) => {
@@ -119,7 +120,7 @@ const getData = view => {
 };
 
 export {
-  ACTION_INIT, ACTION_READY, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
+  ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
   ArrayBuffer, Atomics,
 
@@ -130,4 +131,6 @@ export {
 
   extend,
   isChannel,
+  views,
+  withResolvers,
 };

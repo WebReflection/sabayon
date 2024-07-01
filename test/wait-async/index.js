@@ -3,7 +3,7 @@ import {
   Int32Array,
   SharedArrayBuffer,
   Worker,
-} from '../../worker-main/main.js';
+} from '../../src/main.js';
 
 const w = new Worker('./worker.js', { type: 'module' });
 const sb = new SharedArrayBuffer(4);

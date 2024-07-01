@@ -1,6 +1,6 @@
 import {
   Atomics,
- } from '../../worker-main/worker.js';
+ } from '../../src/worker.js';
 
 addEventListener('message', event => {
   const { data } = event;

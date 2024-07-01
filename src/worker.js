@@ -1,5 +1,5 @@
 import {
-  ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT,
+  ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
   ArrayBuffer, Atomics,
 
@@ -10,6 +10,8 @@ import {
 
   extend,
   isChannel,
+  views,
+  withResolvers,
 } from './shared.js';
 
 let {
@@ -20,7 +22,7 @@ let {
 
 let ignore = ignoreDirect;
 
-const ready = Promise.withResolvers();
+const ready = withResolvers();
 
 try {
   new SharedArrayBuffer(4);
@@ -31,6 +33,7 @@ try {
   ready.resolve();
 }
 catch (_) {
+  const { stringify, parse } = JSON;
   const $postMessage = postMessage;
 
   let CHANNEL = '';
@@ -41,11 +44,26 @@ catch (_) {
 
   ignore = ignorePatch;
 
-  Atomics.waitAsync = waitAsyncPoly;
   Atomics.notify = (view, index) => {
     const [id] = getData(view);
     $postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
     return 0;
+  };
+  Atomics.waitAsync = (...args) => {
+    const [_, value] = waitAsyncPoly(...args);
+    return { value };
+  };
+  Atomics.wait = (view, index, ...rest) => {
+    const [id] = waitAsyncPoly(view, index, ...rest);
+    $postMessage([CHANNEL, ACTION_SW, id, index]);
+    const xhr = new XMLHttpRequest;
+    xhr.open('POST', `${SERVICE_WORKER}?sabayon`, false);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(stringify([CHANNEL, id, index]));
+    const buffer = parse(xhr.responseText);
+    views.delete(view);
+    for (let i = 0; i < buffer.length; i++) view[i] = buffer[i];
+    return 'ok';
   };
 
   postMessage = (data, ...rest) => $postMessage(postData(CHANNEL, data), ...rest);
@@ -66,6 +84,10 @@ catch (_) {
         }
         case ACTION_WAIT: {
           actionWait(event, ...rest);
+          break;
+        }
+        case ACTION_SW: {
+          ready.resolve();
           break;
         }
         default:
