@@ -65,13 +65,15 @@ const isObject = value => (
 );
 
 const transferred = new WeakMap;
-const transferViews = (data, transfer) => {
+const transferViews = (data, transfer, visited) => {
   if (views.has(data))
     transfer.set(data, views.get(data)[0]);
   else if (!(data instanceof TypedArray || data instanceof ArrayBuffer)) {
     for (const value of values(data)) {
-      if (isObject(value))
-        transferViews(value, transfer);
+      if (isObject(value) && !visited.has(value)) {
+        visited.add(value);
+        transferViews(value, transfer, visited);
+      }
     }
   }
 };
@@ -111,7 +113,7 @@ const actionWait = (event, transfer, data) => {
 
 const postData = (CHANNEL, data) => {
   const transfer = new Map;
-  if (isObject(data)) transferViews(data, transfer);
+  if (isObject(data)) transferViews(data, transfer, new Set);
   return transfer.size ? [CHANNEL, ACTION_WAIT, transfer, data] : data;
 };
 
