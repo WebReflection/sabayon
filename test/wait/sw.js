@@ -1,5 +1,3 @@
-const SELF_URL = `${location.href}?sabayon`;
-
 const { isArray } = Array;
 const { join } = [];
 
@@ -9,6 +7,8 @@ const stop = event => {
   event.stopImmediatePropagation();
   event.preventDefault();
 };
+
+addEventListener('activate', e => e.waitUntil(clients.claim()));
 
 addEventListener('message', event => {
   const { data } = event;
@@ -25,7 +25,7 @@ addEventListener('message', event => {
 
 addEventListener('fetch', event => {
   const { request: r } = event;
-  if (r.method === 'POST' && r.url === SELF_URL) {
+  if (r.method === 'POST' && r.url === `${location.href}?sabayon`) {
     stop(event);
     event.respondWith(r.json().then(async data => {
       const { promise, resolve } = Promise.withResolvers();

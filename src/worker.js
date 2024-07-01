@@ -1,3 +1,5 @@
+// (c) Andrea Giammarchi - MIT
+
 import {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
@@ -49,10 +51,12 @@ catch (_) {
     $postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
     return 0;
   };
+
   Atomics.waitAsync = (...args) => {
     const [_, value] = waitAsyncPoly(...args);
     return { value };
   };
+
   Atomics.wait = (view, index, ...rest) => {
     const [id] = waitAsyncPoly(view, index, ...rest);
     $postMessage([CHANNEL, ACTION_SW, id, index]);

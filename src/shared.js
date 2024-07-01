@@ -1,3 +1,5 @@
+// (c) Andrea Giammarchi - MIT
+
 const ACTION_INIT = 0;
 const ACTION_NOTIFY = 1;
 const ACTION_WAIT = 2;
