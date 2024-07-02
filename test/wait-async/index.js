@@ -5,7 +5,14 @@ import {
   Worker,
 } from '../../dist/main.js';
 
-const w = new Worker('./worker.js', { type: 'module', serviceWorker: '../sw.js' });
+const options = { type: 'module' };
+
+// optionally test via ServiceWorker too
+// due different bootstrap time
+if (location.search === '?sw')
+  options.serviceWorker = '../sw.js';
+
+const w = new Worker('./worker.js', options);
 const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
 

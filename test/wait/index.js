@@ -3,7 +3,11 @@ import {
   Worker,
 } from '../../dist/main.js';
 
-const w = new Worker('./worker.js', { type: 'module', serviceWorker: '../sw.js' });
+// usage of `serviceWorker` option is mandatory to enable
+// the sync-blocking `Atomics.wait` in workers
+const options = { type: 'module', serviceWorker: '../sw.js' };
+
+const w = new Worker('./worker.js', options);
 
 w.addEventListener('message', event => {
   const { data } = event;

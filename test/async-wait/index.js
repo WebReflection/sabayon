@@ -3,7 +3,14 @@ import {
   Worker,
 } from '../../dist/main.js';
 
-const w = new Worker('./worker.js', { type: 'module', serviceWorker: '../sw.js' });
+const options = { type: 'module' };
+
+// optionally test via ServiceWorker too
+// due different bootstrap time
+if (location.search === '?sw')
+  options.serviceWorker = '../sw.js';
+
+const w = new Worker('./worker.js', options);
 
 w.addEventListener('message', event => {
   const { data } = event;

@@ -4,12 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>sabayon tests</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; }
+    ul:not(ul ul) { padding: 0; }
+  </style>
 </head>
 <body>
   <ul>
-    <li><a href="./wait-async/">main waiting <em>async</em> worker</a></li>
-    <li><a href="./async-wait/">worker waiting <em>async</em> main</a></li>
-    <li><a href="./wait/">worker waiting <em>sync</em> main</a></li>
+    <li>
+      <strong>No Service Worker</strong>
+      <ul>
+        <li><a href="./wait-async/">main waiting <em>async</em> worker</a></li>
+        <li><a href="./async-wait/">worker waiting <em>async</em> main</a></li>
+      </ul>
+      <hr>
+    </li>
+    <li>
+      <strong>With Service Worker</strong>
+      <ul>
+        <li><a href="./wait-async/?sw">main waiting <em>async</em> worker</a></li>
+        <li><a href="./async-wait/?sw">worker waiting <em>async</em> main</a></li>
+        <li><a href="./wait/">worker waiting <em>sync</em> main</a></li>
+      </ul>
+      <hr>
+    </li>
   </ul>
 </body>
 </html>
