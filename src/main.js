@@ -48,10 +48,18 @@ catch (_) {
       if (isChannel(event, CHANNEL)) {
         const [_, id, index] = event.data;
         const uid = [id, index].join(',');
-        const [view, timer] = sync.get(uid);
-        sync.delete(uid);
-        clearTimeout(timer);
-        w.postMessage([ CHANNEL, id, index, view ]);
+        const done = ([view, timer]) => {
+          drop(uid);
+          if (timer !== null) clearTimeout(timer);
+          w.postMessage([ CHANNEL, id, index, view ]);
+        };
+        const value = sync.get(uid);
+        if (value) done(value);
+        else {
+          const { promise, resolve } = withResolvers();
+          sync.set(uid, resolve);
+          promise.then(done);
+        }
       }
     });
     s.register(sw).then(function ready(r) {
@@ -68,7 +76,9 @@ catch (_) {
   Atomics.notify = (view, index) => {
     const [id, worker] = getData(view);
     const uid = [id, index].join(',');
-    sync.set(uid, [view, setTimeout(drop, 1000, uid)]);
+    const value = sync.get(uid);
+    if (value) value([view, null]);
+    else sync.set(uid, [view, setTimeout(drop, 1000, uid)]);
     worker.postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
     return 0;
   };
@@ -112,8 +122,9 @@ catch (_) {
               break;
             }
             case ACTION_SW: {
-              const [_, timer] = sync.get(rest.join(','));
-              clearTimeout(timer);
+              const uid = rest.join(',');
+              const value = sync.get(uid);
+              if (value) clearTimeout(value[1]);
               break;
             }
           }
