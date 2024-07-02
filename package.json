@@ -1,6 +1,6 @@
 {
   "name": "sabayon",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "scripts": {
     "build": "rollup --config rollup.js && cp dist/sw.js test/wait/sw.js && cp dist/sw.js test/sw.js",
     "coi": "mini-coi .",
