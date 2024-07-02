@@ -24,8 +24,16 @@ let {
 
 let ignore = ignoreDirect;
 
+const asModule = options => ({ ...options, type: 'module' });
+
 try {
   new SharedArrayBuffer(4);
+
+  Worker = class extends Worker {
+    constructor(url, options) {
+      super(url, asModule(options));
+    }
+  }
 
   if (!Atomics.waitAsync)
     Atomics.waitAsync = waitAsyncPatch;
@@ -90,7 +98,7 @@ catch (_) {
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
   Worker = class extends Worker {
-    constructor(url, options = {}) {
+    constructor(url, options) {
       let sw = options?.serviceWorker || '';
       if (sw) {
         sw = new URL(sw, location.href).href;
@@ -104,7 +112,7 @@ catch (_) {
           () => super.postMessage([CHANNEL, ACTION_SW])
         );
       }
-      super(url, { ...options, type: 'module' });
+      super(url, asModule(options));
       super.postMessage([CHANNEL, ACTION_INIT, options]);
       addListener(this, 'message', event => {
         if (isChannel(event, CHANNEL)) {

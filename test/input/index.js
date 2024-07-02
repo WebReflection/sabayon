@@ -3,7 +3,7 @@ import {
   Worker,
 } from '../../dist/main.js';
 
-const options = { serviceWorker: '../sw.js' };
+const options = { type: 'module', serviceWorker: '../sw.js' };
 const w = new Worker('./worker.js', options);
 
 const input = document.getElementById('questions');
