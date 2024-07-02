@@ -39,7 +39,7 @@ try {
   ready.resolve();
 }
 catch (_) {
-  const { stringify, parse } = JSON;
+  const { stringify } = JSON;
   const $postMessage = postMessage;
   const $addEventListener = addEventListener;
 
@@ -68,12 +68,13 @@ catch (_) {
   Atomics.wait = (view, index, ...rest) => {
     const [id] = waitAsyncPoly(view, index, ...rest);
     const xhr = new XMLHttpRequest;
+    xhr.responseType = 'json';
     xhr.open('POST', `${SERVICE_WORKER}?sabayon`, false);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(stringify([CHANNEL, id, index]));
-    const buffer = parse(xhr.responseText);
+    const { response } = xhr;
     views.delete(view);
-    for (let i = 0; i < buffer.length; i++) view[i] = buffer[i];
+    for (let i = 0; i < response.length; i++) view[i] = response[i];
     return 'ok';
   };
 
