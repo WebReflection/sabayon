@@ -66,6 +66,8 @@ catch (_) {
   };
 
   Atomics.wait = (view, index, ...rest) => {
+    if (!SERVICE_WORKER)
+      throw new SyntaxError('Atomics.wait requires a Service Worker');
     const [id] = waitAsyncPoly(view, index, ...rest);
     const xhr = new XMLHttpRequest;
     xhr.responseType = 'json';
