@@ -109,13 +109,13 @@ Measured "*on my machine*", these are results passing along a `{ some: 'value', 
 
 **Native**
 
-  * **waitAsync** from *Main* - use a *Worker* to `notify(...)`: 17ms
+  * **waitAsync** from *Main* - use a *Worker* to `notify(...)`: 11ms
   * **waitAsync** from a *Worker* - use *Main* to `notify(...)`: 0.4ms
   * **wait** *sync* from a *Worker* - use *Main* to `notify(...)`: 0.3ms
 
 **Polyfill**
 
-  * **waitAsync** from *Main* - use a *Worker* to `notify(...)`: 17ms (about the same)
+  * **waitAsync** from *Main* - use a *Worker* to `notify(...)`: 12ms (about the same)
   * **waitAsync** from a *Worker* - use *Main* to `notify(...)`: 0.8ms (~2x slower)
   * **wait** *sync* from a *Worker* - use *Main* to `notify(...)`: 2ms (~7x slower due *ServiceWorker ↔ Main* roundtrip taking 90% of the time)
 

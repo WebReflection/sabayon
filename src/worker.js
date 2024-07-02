@@ -42,9 +42,6 @@ catch (_) {
   const $postMessage = postMessage;
   const $addEventListener = addEventListener;
 
-  const trap = ({ currentTarget, type, origin, lastEventId, source, ports }) =>
-    ({ currentTarget, type, origin, lastEventId, source, ports });
-
   const messages = [];
 
   let CHANNEL = '';
@@ -94,10 +91,7 @@ catch (_) {
           break;
         }
         case ACTION_WAIT: {
-          const [transfer, data] = rest;
-          actionWait(event, transfer, data);
-          if (bootstrapping)
-            messages.push([trap(event), data]);
+          actionWait(event, ...rest);
           break;
         }
         case ACTION_SW: {
@@ -106,11 +100,15 @@ catch (_) {
         }
       }
     }
+    else if (bootstrapping) {
+      const { currentTarget, type, origin, lastEventId, source, ports } = event;
+      messages.push([{ currentTarget, type, origin, lastEventId, source, ports }, event.data]);
+    }
   });
 
   addEventListener = (type, ...args) => {
     $addEventListener(type, ...args);
-    if (type === 'message') {
+    if (messages.length) {
       for (const args of messages.splice(0))
         dispatch(...args);
     }

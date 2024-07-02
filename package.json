@@ -3,6 +3,7 @@
   "version": "0.1.2",
   "scripts": {
     "build": "rollup --config rollup.js && cp dist/sw.js test/wait/sw.js && cp dist/sw.js test/sw.js",
+    "coi": "mini-coi .",
     "server": "static-handler ."
   },
   "keywords": [
@@ -15,6 +16,7 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "mini-coi": "^0.3.3",
     "rollup": "^4.18.0",
     "static-handler": "^0.4.3"
   },
