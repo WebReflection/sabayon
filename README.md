@@ -183,10 +183,7 @@ On the other side, when these kind of `message` are received, all *views* are te
 
 While this orchestration seems reasonable enough, *Atomics.wait* is a blocking operation that must pause the *worker* until that *view* has been notified at some index on the other side (the *main* thread).
 
-To provide this pause/blocking mechanism we need:
-
-  * a way to tell the *main* that we're going to block the *worker* until such *view* has been notified, and here `postMessage` would just trigger without problems
-  * a way to block the current *worker* until such *view* has been notified ... but we need something not blocked behind the scene to make this happen!
+To provide this pause/blocking mechanism we need a way to block the current *worker* until such *view* has been notified ... but we need something not blocked behind the scene to make this happen 🤔
 
 Abusing *XMLHttpRequest* in *sync* mode it is then, so we can *POST* a message with enough details that will produce a pending *Response* until such details are forwarded to any page or tab that is registered and that recognize the unique *CHANNEL*, to then wait for that page to tell us back the *view* has been notified, by sending the *view* content that is then returned as *JSON* response, so that the *worker* can access the `xhr.responseText`, *parse* that array, update the *view* that was waiting to be notified, and finally get out of the `Atomics.wait(view, index)` operation in a 100% *synchronous* fashion that moved asynchronously that Service Worker and one *main* thread in the meanwhile.
 

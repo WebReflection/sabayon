@@ -67,7 +67,6 @@ catch (_) {
 
   Atomics.wait = (view, index, ...rest) => {
     const [id] = waitAsyncPoly(view, index, ...rest);
-    $postMessage([CHANNEL, ACTION_SW, id, index]);
     const xhr = new XMLHttpRequest;
     xhr.open('POST', `${SERVICE_WORKER}?sabayon`, false);
     xhr.setRequestHeader('Content-Type', 'application/json');

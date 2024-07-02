@@ -40,21 +40,18 @@ catch (_) {
     self.addEventListener(type, handler, ...rest);
   };
 
-  const drop = uid => sync.delete(uid);
-
   const register = ({ serviceWorker: s }, sw, done) => {
     let w;
     addListener(s, 'message', event => {
       if (isChannel(event, CHANNEL)) {
         const [_, id, index] = event.data;
         const uid = [id, index].join(',');
-        const done = ([view, timer]) => {
-          drop(uid);
-          if (timer !== null) clearTimeout(timer);
+        const done = view => {
+          sync.delete(uid);
           w.postMessage([ CHANNEL, id, index, view ]);
         };
-        const value = sync.get(uid);
-        if (value) done(value);
+        const view = sync.get(uid);
+        if (view) done(view);
         else {
           const { promise, resolve } = withResolvers();
           sync.set(uid, resolve);
@@ -76,9 +73,9 @@ catch (_) {
   Atomics.notify = (view, index) => {
     const [id, worker] = getData(view);
     const uid = [id, index].join(',');
-    const value = sync.get(uid);
-    if (value) value([view, null]);
-    else sync.set(uid, [view, setTimeout(drop, 1000, uid)]);
+    const known = sync.get(uid);
+    if (known) known(view);
+    else sync.set(uid, view);
     worker.postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
     return 0;
   };
@@ -119,12 +116,6 @@ catch (_) {
             }
             case ACTION_WAIT: {
               actionWait(event, ...rest);
-              break;
-            }
-            case ACTION_SW: {
-              const uid = rest.join(',');
-              const value = sync.get(uid);
-              if (value) clearTimeout(value[1]);
               break;
             }
           }
