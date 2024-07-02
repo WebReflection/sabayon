@@ -91,7 +91,7 @@ catch (_) {
 
   Worker = class extends Worker {
     constructor(url, options = {}) {
-      let sw = options.serviceWorker || '';
+      let sw = options?.serviceWorker || '';
       if (sw) {
         sw = new URL(sw, location.href).href;
         options = { ...options, serviceWorker: sw };
@@ -104,7 +104,7 @@ catch (_) {
           () => super.postMessage([CHANNEL, ACTION_SW])
         );
       }
-      super(url, options);
+      super(url, { ...options, type: 'module' });
       super.postMessage([CHANNEL, ACTION_INIT, options]);
       addListener(this, 'message', event => {
         if (isChannel(event, CHANNEL)) {
