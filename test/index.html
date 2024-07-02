@@ -7,25 +7,44 @@
   <style>
     body { font-family: Arial, Helvetica, sans-serif; }
     ul:not(ul ul) { padding: 0; }
+    a { display: block; padding: 2px; }
+    ul ul li { opacity: .7; transition: opacity .3s; }
+    ul ul li:hover { opacity: 1; }
   </style>
 </head>
 <body>
   <ul>
     <li>
-      <strong>No Service Worker</strong>
+      <strong>No Service Worker</strong> <small>Direct</small>
       <ul>
         <li><a href="./wait-async/">main waiting <em>async</em> worker</a></li>
         <li><a href="./async-wait/">worker waiting <em>async</em> main</a></li>
       </ul>
+      <br>
+    </li>
+    <li>
+      <strong>No Service Worker</strong> <small>3 Seconds Delay</small>
+      <ul>
+        <li><a href="./long-wait-async/">main waiting <em>async</em> worker</a></li>
+        <li><a href="./long-async-wait/">worker waiting <em>async</em> main</a></li>
+      </ul>
       <hr>
     </li>
     <li>
-      <strong>With Service Worker</strong>
+      <strong>With Service Worker</strong> <small>Direct</small>
       <ul>
         <li><a href="./wait-async/?sw">main waiting <em>async</em> worker</a></li>
         <li><a href="./async-wait/?sw">worker waiting <em>async</em> main</a></li>
         <li><a href="./wait/">worker waiting <em>sync</em> main</a></li>
-        <li><a href="./long-wait/">worker waiting <em>sync</em> main for 3 seconds</a></li>
+      </ul>
+      <br>
+    </li>
+    <li>
+      <strong>With Service Worker</strong> <small>3 Seconds Delay</small>
+      <ul>
+        <li><a href="./long-wait-async/?sw">main waiting <em>async</em> worker</a></li>
+        <li><a href="./long-async-wait/?sw">worker waiting <em>async</em> main</a></li>
+        <li><a href="./long-wait/">worker waiting <em>sync</em> main</a></li>
       </ul>
       <hr>
     </li>

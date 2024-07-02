@@ -105,6 +105,26 @@ Atomics.waitAsync(view, 0).value.then(result => {
 ```
 
 <details>
+  <summary><strong>Why is this needed?</strong></summary>
+  <div markdown=1>
+
+Both [SharedArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) and some [Atomics](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics) operations require special headers to work out of the box.
+
+This has been an endless source of pain for various projects, where the suggested solutions can be summarized as such:
+
+  * there is no way around the fact to enable both technologies one needs [special headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) to have native functionality and performance and this is still the preferred way to use these APIs
+  * a *ServiceWorker* based workaround, such as [mini-coi](https://github.com/WebReflection/mini-coi#readme), could be used to automatically enable, whenever it's possible, those headers where it's not possible to change these otherwise (like on *GitHub pages* or other similar hosts)
+    * ... and yet, even using *mini-coi* might create friction for edge cases where embedding *YouTube* content or other 3rd party domains might not like augmented headers for their services
+  * there is no *polyfill* for any of these primitives, one that can actually be used as "*drop-in*" replacement for all the globals that surround this part of the Web (*SharedArrayBuffer*, *Int32Array*, *Atomics.wait*, *Atomics.waitAsync* and *Atomics.notify*)
+
+This **project goal** is to **enable all of that**, like a polyfill would do, without needing to patch anything at the global context level 🎉
+
+P.S. this module also enables out of the box *Firefox* missing `notifyAsync` via its own logic.
+
+  </div>
+</details>
+
+<details>
   <summary><strong>How does this work?</strong></summary>
   <div markdown=1>
 
@@ -211,28 +231,11 @@ Measured "*on my machine*", these are results passing along a `{ some: 'value', 
 
 **Polyfill**
 
-  * **waitAsync** from *Main* - use a *Worker* to `notify(...)`: 12ms (about the same)
-  * **waitAsync** from a *Worker* - use *Main* to `notify(...)`: 0.8ms (~2x slower)
-  * **wait** *sync* from a *Worker* - use *Main* to `notify(...)`: 2ms (~7x slower due *ServiceWorker ↔ Main* roundtrip taking 90% of the time)
+  * **waitAsync** from *Main* - use a *Worker* to `notify(...)`: 12ms <sub><sup>(about the same)</sup></sub>
+  * **waitAsync** from a *Worker* - use *Main* to `notify(...)`: 0.8ms <sub><sup>(~2x slower)</sup></sub>
+  * **wait** *sync* from a *Worker* - use *Main* to `notify(...)`: 2ms <sub><sup>(~7x slower due *ServiceWorker ↔ Main* roundtrip taking 90% of the time)</sup></sub>
 
 **Note** that due lack of real *SharedArrayBuffer* primitive the memory consumption can be temporarily duplicated on both *Main* and *Workers* but fear not, no leaks happen so this should never be a real-world issue.
-
-
-#### Background
-
-Both [SharedArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) and some [Atomics](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics) operations require special headers to work out of the box.
-
-This has been an endless source of pain for various projects, where the suggested solutions can be summarized as such:
-
-  * there is no way around the fact to enable both technologies one needs [special headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy) to have native functionality and performance and this is still the preferred way to use these APIs
-  * a *ServiceWorker* based workaround, such as [mini-coi](https://github.com/WebReflection/mini-coi#readme), could be used to automatically enable, whenever it's possible, those headers where it's not possible to change these otherwise (like on *GitHub pages* or other similar hosts)
-    * ... and yet, even using *mini-coi* might create friction for edge cases where embedding *YouTube* content or other 3rd party domains might not like augmented headers for their services
-  * there is no *polyfill* for any of these primitives, one that can actually be used as "*drop-in*" replacement for all the globals that surround this part of the Web (*SharedArrayBuffer*, *Int32Array*, *Atomics.wait*, *Atomics.waitAsync* and *Atomics.notify*)
-
-This **project goal** is to **enable all of that**, like a polyfill would do, without needing to patch anything at the global context level 🎉
-
-P.S. this module also enables out of the box *Firefox* missing `notifyAsync` via its own logic.
-
 
 #### Caveats
 
