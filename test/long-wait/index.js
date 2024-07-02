@@ -14,7 +14,9 @@ w.addEventListener('message', event => {
   if (typeof data === 'string')
     document.body.textContent = data;
   else {
+    console.log('this is going to be legen ...');
     setTimeout(() => {
+      console.log('... dary!');
       console.log('Main', data);
       data.view[0] = 1;
       Atomics.notify(data.view, 0);
