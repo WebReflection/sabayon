@@ -104,6 +104,103 @@ Atomics.waitAsync(view, 0).value.then(result => {
 });
 ```
 
+<details>
+  <summary><strong>How does this work?</strong></summary>
+  <div markdown=1>
+
+Using a minimal runtime feature detection, such as:
+
+```js
+try {
+  new SharedArrayBuffer(4);
+}
+catch (polyfillRequired) {
+  // the polyfill
+}
+```
+
+It is possible to detect when the current page is capable of using native features and simply export these without affecting at all performance or standard behavior.
+
+When such constructor does not exist or it fails at allocating anything more than `0` bytes though, a workaround is orchestrated in both the *main* thread and each *worker* created through such *main*, and here is how.
+
+If we remove the *Shared* prefix, it's all about *ArrayBuffer*, and that's indeed how *SAB* class is created:
+
+```js
+SharedArrayBuffer = class extends ArrayBuffer {}
+```
+
+Once that's done, the only wrappers able to deal with that kind of buffer are *Int32Array* and *BigInt64Array*.
+
+```js
+const extend = (Class, SharedArrayBuffer) => class extends Class {
+  constructor(value, ...rest) {
+    super(value, ...rest);
+    if (value instanceof SharedArrayBuffer) {
+      // logic to track / recognize these wrappers
+      // when postMessage are used to send data
+      // and "message" listeners intercept such data
+    }
+  }
+};
+
+BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
+Int32Array = extend(Int32Array, SharedArrayBuffer);
+```
+
+There is a little known, yet wonderful, API that is [structuredClone](https://developer.mozilla.org/en-US/docs/Web/API/structuredClone). Its functionality is used in various APIs such as *IndexedDB* and *postMessage*.
+
+What makes it special and useful for these scenarios is its ability to deal with recursion, which in turns means it's able to send the same reference over the wire only once, still preserving the identity at the receiver side of affairs:
+
+```js
+const complexData = { huge: "payload" };
+
+// Worker
+// this will send complexData same reference at
+// both index 0 and index 1 .data
+postMessage([complexData, { data: complexData }]);
+
+// Main
+worker.addEventListener('message', event => {
+  const [complexData, obj] = event.data;
+  // true - no assertion failed
+  console.assert(complexData === obj.data);
+});
+```
+
+Connecting the dots, so far we have a way to recognize and track *views* that are meant to be posted and received around plus a way to intercept such *views* on the other side, using a basic *CHANNEL* based protocol, nothing really too different from the way *MQTT* works.
+
+```js
+// main page - ensure a unique channel per page/tab
+const CHANNEL = crypto.randomUUID();
+
+// when post message is used and there are views to send
+postMessage([CHANNEL, action, views, data])
+
+// views will be a Set of views that is also contained in data
+```
+
+On the other side, when these kind of `message` are received, all *views* are temporarily stored so that any *Atomics* operation that would like to `wait`, `waitAsync` or `notify` these *views*, the logic knows these have a unique identifier themselves (that is just a forever increasing `i++`) so that such *view* knows that it should be updated on the other side and *release the lock* after some cleanup.
+
+While this orchestration seems reasonable enough, *Atomics.wait* is a blocking operation that must pause the *worker* until that *view* has been notified at some index on the other side (the *main* thread).
+
+To provide this pause/blocking mechanism we need:
+
+  * a way to tell the *main* that we're going to block the *worker* until such *view* has been notified, and here `postMessage` would just trigger without problems
+  * a way to block the current *worker* until such *view* has been notified ... but we need something not blocked behind the scene to make this happen!
+
+Abusing *XMLHttpRequest* in *sync* mode it is then, so we can *POST* a message with enough details that will produce a pending *Response* until such details are forwarded to any page or tab that is registered and that recognize the unique *CHANNEL*, to then wait for that page to tell us back the *view* has been notified, by sending the *view* content that is then returned as *JSON* response, so that the *worker* can access the `xhr.responseText`, *parse* that array, update the *view* that was waiting to be notified, and finally get out of the `Atomics.wait(view, index)` operation in a 100% *synchronous* fashion that moved asynchronously that Service Worker and one *main* thread in the meanwhile.
+
+**As summary**
+
+  * there is a unique (per page/tab) communication *CHANNEL* that is both sent and intercepted on `message` events, able to orchestrate via *actions* all needed operations on any side of affair
+  * there is a mechanism to automatically crawl and track *views* that contain the semi-fake *SharedArrayBuffer* but one can also opt-out via an `ignore` utility
+  * there is an asynchronous communication for `Atomics.waitAsync` that just works by updating and awaiting back and forward those *views*
+  * there is an optional *Service Worker* where data is posted that can orchestrate blocking-like operations on the *worker* side, when `Atomics.wait` is used instead of *waitAsync*
+
+... and that's pretty much it.
+
+  </div>
+</details>
 
 #### Performance
 
