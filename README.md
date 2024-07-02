@@ -104,6 +104,15 @@ Atomics.waitAsync(view, 0).value.then(result => {
 });
 ```
 
+##### Service Worker
+
+This module comes with a basic, yet handy, *CLI* utility that saves `sabayon/sw` export into a path.
+
+```sh
+npx sabayon ./public/sw.js
+```
+
+
 <details>
   <summary><strong>Why is this needed?</strong></summary>
   <div markdown=1>

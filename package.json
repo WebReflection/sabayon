@@ -1,8 +1,11 @@
 {
   "name": "sabayon",
   "version": "0.2.5",
+  "bin": {
+    "sabayon": "cli.cjs"
+  },
   "scripts": {
-    "build": "rollup --config rollup.js && cp dist/sw.js test/sw.js",
+    "build": "rollup --config rollup.js && node cli.cjs ./test/sw.js",
     "coi": "mini-coi .",
     "server": "static-handler ."
   },
