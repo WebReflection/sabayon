@@ -16,6 +16,7 @@ import {
 } from './shared.js';
 
 let {
+  BigInt64Array,
   Int32Array,
   SharedArrayBuffer,
   Worker,
@@ -78,6 +79,7 @@ catch (_) {
   };
 
   SharedArrayBuffer = class extends ArrayBuffer {}
+  BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
   Worker = class extends Worker {
@@ -126,6 +128,7 @@ catch (_) {
 
 export {
   /** @type {globalThis.Atomics} */ Atomics,
+  /** @type {globalThis.BigInt64Array} */ BigInt64Array,
   /** @type {globalThis.Int32Array} */ Int32Array,
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
   /** @type {globalThis.Worker} */ Worker,

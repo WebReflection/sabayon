@@ -22,6 +22,7 @@ Remember to run a local server to test these modules, or check the **[live test 
 ```js
 import {
   Atomics,
+  BigInt64Array,
   Int32Array,
   SharedArrayBuffer,
   addEventListener, // use this to add worker listeners
@@ -65,6 +66,7 @@ console.log('view changed', [...view]);
 ```js
 import {
   Atomics,
+  BigInt64Array,
   Int32Array,
   SharedArrayBuffer,
   Worker,
@@ -141,6 +143,6 @@ P.S. this module also enables out of the box *Firefox* missing `notifyAsync` via
 #### Caveats
 
   * the optional **Service Worker**, if *sync* `Atomics.wait(...)` is desired, *MUST* be a local file. It cannot be downloaded as module, even if `sabayon/sw` export exists.
-  * **no BigInt64Array** due inability to easily represent these entries via *JSON* when it comes to the *sync* `Atomics.wait(...)`.
+  * differently from the *Int32Array*, the **BigInt64Array** does **not** work with *sync* `Atomics.wait(...)` in emulation mode, due inability to easily represent these entries via *JSON*.
   * **no interrupts** (timeout handlers) possible when in emulation mode. These are complex to implement via *ServiceWorker* and quite possibly not super common out there. If proper headers are used though, everything would work natively without any issue whatsoever.
   * **notify(view, index)** are currently the only supported arguments when running in emulation mode. This is due the inability to make sense of a `count` argument and due the fact *interrupts* don't work so that a `delay` makes little sense. You can still pass these values if you like but in emulation these will be ignored.
