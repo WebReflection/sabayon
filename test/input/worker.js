@@ -5,19 +5,20 @@ import {
   postMessage,
 } from '../../dist/worker.js';
 
-const sb = new SharedArrayBuffer(1024);
-const view = new Int32Array(sb);
+const ask = question => {
+  const sb = new SharedArrayBuffer(1024);
+  const view = new Int32Array(sb);
+  postMessage({ message: question, view });
+  Atomics.wait(view, 0);
+  const chars = [];
+  for (let i = 0; i < view.length; i++) {
+    if (view[i]) chars[i] = view[i];
+    else break;
+  }
+  return String.fromCharCode(...chars);
+};
 
-postMessage(view);
+const name = ask('what is your name?');
+const surname = ask('what is your surname?');
 
-console.log('asking for something ...');
-
-Atomics.wait(view, 0);
-
-const chars = [];
-for (let i = 0; i < view.length; i++) {
-  if (view[i]) chars[i] = view[i];
-  else break;
-}
-
-console.log('Input:', String.fromCharCode(...view));
+postMessage({ message: `Hello ${name} ${surname} 👋` });
