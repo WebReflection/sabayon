@@ -27,6 +27,7 @@
   "exports": {
     "./main": "./src/main.js",
     "./worker": "./src/worker.js",
+    "./shared": "./src/shared.js",
     "./sw": "./src/sw.js",
     "./sw-listeners": "./src/sw-listeners.js",
     "./package.json": "./package.json"
