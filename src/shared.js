@@ -1,9 +1,11 @@
 // (c) Andrea Giammarchi - MIT
 
-const ACTION_INIT = 0;
-const ACTION_NOTIFY = 1;
-const ACTION_WAIT = 2;
-const ACTION_SW = 3;
+let id = 0;
+
+const ACTION_INIT = id++;
+const ACTION_NOTIFY = id++;
+const ACTION_WAIT = id++;
+const ACTION_SW = id++;
 
 const { ArrayBuffer, Atomics: $Atomics, Promise } = globalThis;
 const { isArray } = Array;
@@ -17,7 +19,6 @@ const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, d
 
 const withResolvers = () => Promise.withResolvers();
 
-let id = 0;
 const views = new Map;
 const extend = (Class, SharedArrayBuffer) => class extends Class {
   constructor(value, ...rest) {
@@ -131,6 +132,7 @@ export {
 
   dispatch,
   extend,
+  id,
   isChannel,
   views,
   withResolvers,
