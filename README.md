@@ -112,6 +112,37 @@ This module comes with a basic, yet handy, *CLI* utility that saves `sabayon/sw`
 npx sabayon ./public/sw.js
 ```
 
+**Please note** that if you have your own Service Worker logic already in place, you can use the `sabayon/sw-listeners` export to simply augment your file:
+
+```js
+import { activate, fetch, message } from 'sabayon/sw-listeners';
+
+// Way No #1
+// you can either add these listeners first
+// as `event.stopImmediatePropagation()` is used
+// whenever the `event` is handled
+addEventListener('fetch', fetch);
+addEventListener('message', message);
+
+// Way No #2
+// alternatively, you can use those callbacks
+// and eventually do nothing if preventDefault()
+// was called via that `event`
+addEventListener('fetch', event => {
+  fetch(event);
+  if (event.defaultPrevented) return;
+  // your previously implemented logic
+});
+
+addEventListener('message', event => {
+  message(event);
+  if (event.defaultPrevented) return;
+  // your previously implemented logic
+});
+```
+
+It is still important to add at least both `fetch` and `message` listeners, while `activate` ensures that `event.waitUntil(clients.claim())` is invoked so that workers can bootstrap right after when the `serviceWorker` option is passed along.
+
 
 <details>
   <summary><strong>Why is this needed?</strong></summary>

@@ -11,6 +11,14 @@ export default [
     }
   },
   {
+    input: './src/sw-listeners.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/sw-listeners.js',
+    }
+  },
+  {
     input: './src/sw.js',
     plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
     output: {
