@@ -30,5 +30,13 @@
     "./sw": "./src/sw.js",
     "./sw-listeners": "./src/sw-listeners.js",
     "./package.json": "./package.json"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebReflection/sabayon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WebReflection/sabayon/issues"
+  },
+  "homepage": "https://github.com/WebReflection/sabayon#readme"
 }
