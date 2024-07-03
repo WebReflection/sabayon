@@ -66,8 +66,6 @@ catch (_) {
   };
 
   Atomics.wait = (view, index, ...rest) => {
-    if (!SERVICE_WORKER)
-      throw new SyntaxError('Atomics.wait requires a Service Worker');
     const [id] = waitAsyncPoly(view, index, ...rest);
     const xhr = new XMLHttpRequest;
     xhr.responseType = 'json';
@@ -87,7 +85,10 @@ catch (_) {
         case ACTION_INIT: {
           CHANNEL = _;
           SERVICE_WORKER = rest.at(0)?.serviceWorker || '';
-          if (!SERVICE_WORKER) ready.resolve();
+          if (!SERVICE_WORKER) {
+            Atomics.wait = null;
+            ready.resolve();
+          }
           break;
         }
         case ACTION_NOTIFY: {
