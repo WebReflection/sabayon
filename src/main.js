@@ -41,7 +41,6 @@ try {
 catch (_) {
   const CHANNEL = crypto.randomUUID();
 
-  const serviceWorkers = new Map;
   const sync = new Map;
 
   const addListener = (self, type, handler, ...rest) => {
@@ -97,18 +96,19 @@ catch (_) {
   BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
+  let serviceWorker = null;
   Worker = class extends Worker {
     constructor(url, options) {
       let sw = options?.serviceWorker || '';
       if (sw) {
         sw = new URL(sw, location.href).href;
         options = { ...options, serviceWorker: sw };
-        if (!serviceWorkers.has(sw)) {
+        if (!serviceWorker) {
           const { promise, resolve } = withResolvers();
           register(navigator, sw, resolve);
-          serviceWorkers.set(sw, promise);
+          serviceWorker = promise;
         }
-        serviceWorkers.get(sw).then(
+        serviceWorker.then(
           () => super.postMessage([CHANNEL, ACTION_SW])
         );
       }
