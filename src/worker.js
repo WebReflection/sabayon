@@ -40,7 +40,6 @@ try {
   ready.resolve();
 }
 catch (_) {
-  const { stringify } = JSON;
   const $postMessage = postMessage;
   const $addEventListener = addEventListener;
 
@@ -73,7 +72,7 @@ catch (_) {
     xhr.responseType = 'json';
     xhr.open('POST', `${SERVICE_WORKER}?sabayon`, false);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(stringify([CHANNEL, id, index]));
+    xhr.send(`["${CHANNEL}",${id},${index}]`);
     const { response } = xhr;
     views.delete(view);
     for (let i = 0; i < response.length; i++) view[i] = response[i];

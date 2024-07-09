@@ -1,7 +1,6 @@
 // (c) Andrea Giammarchi - MIT
 
 const { isArray } = Array;
-const { join } = [];
 
 const transactions = new Map;
 
@@ -23,7 +22,7 @@ export const fetch = event => {
       for (const client of await clients.matchAll())
         client.postMessage(data);
       return promise.then(value => new Response(
-        `[${join.call(value, ',')}]`,
+        `[${value.join(',')}]`,
         r.headers,
       ));
     }));
