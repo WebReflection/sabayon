@@ -23,6 +23,7 @@ let {
 } = globalThis;
 
 let ignore = ignoreDirect;
+let polyfill = false;
 
 const asModule = options => ({ ...options, type: 'module' });
 
@@ -76,6 +77,7 @@ catch (_) {
   };
 
   ignore = ignorePatch;
+  polyfill = true;
 
   Atomics.notify = (view, index) => {
     const [id, worker] = getData(view);
@@ -143,4 +145,5 @@ export {
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
   /** @type {globalThis.Worker} */ Worker,
   ignore,
+  polyfill,
 };

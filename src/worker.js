@@ -25,8 +25,9 @@ let {
   postMessage,
 } = globalThis;
 
-let ignore = ignoreDirect;
 let bootstrapping = true;
+let ignore = ignoreDirect;
+let polyfill = false;
 
 const ready = withResolvers();
 
@@ -53,6 +54,7 @@ catch (_) {
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
   ignore = ignorePatch;
+  polyfill = true;
 
   Atomics.notify = (view, index) => {
     const [id] = getData(view);
@@ -134,4 +136,5 @@ export {
   /** @type {globalThis.addEventListener} */ addEventListener,
   /** @type {globalThis.postMessage} */ postMessage,
   ignore,
+  polyfill,
 };
