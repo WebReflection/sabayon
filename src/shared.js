@@ -122,7 +122,7 @@ const getData = view => transferred.get(view);
 export {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
-  ArrayBuffer, Atomics,
+  ArrayBuffer, Atomics, TypedArray,
 
   actionNotify, actionWait,
   getData, postData,
