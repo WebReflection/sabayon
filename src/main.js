@@ -67,13 +67,16 @@ catch (_) {
         }
       }
     });
-    s.register(sw).then(function ready(r) {
-      w = (r.installing || r.waiting || r.active);
-      if (w.state === 'activated')
-        done();
-      else
-        addListener(w, 'statechange', () => ready(r), { once: true });
-    });
+    // use previous registration, if any, before registering it
+    s.getRegistration(sw)
+      .then(r => (r ?? s.register(sw)))
+      .then(function ready(r) {
+        w = (r.installing || r.waiting || r.active);
+        if (w.state === 'activated')
+          done();
+        else
+          addListener(w, 'statechange', () => ready(r), { once: true });
+      });
   };
 
   ignore = ignorePatch;

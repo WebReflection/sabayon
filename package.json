@@ -20,7 +20,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "mini-coi": "^0.3.3",
-    "rollup": "^4.18.0",
+    "rollup": "^4.19.0",
     "static-handler": "^0.4.3"
   },
   "type": "module",
