@@ -29,6 +29,8 @@ export const fetch = event => {
   }
 };
 
+export const install = () => skipWaiting();
+
 export const message = event => {
   const { data } = event;
   if (isArray(data) && data.length === 4) {

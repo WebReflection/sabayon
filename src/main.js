@@ -49,7 +49,7 @@ catch (_) {
   };
 
   const register = ({ serviceWorker: s }, sw, done) => {
-    let w;
+    let w, c = true;
     addListener(s, 'message', event => {
       if (isChannel(event, CHANNEL)) {
         const [_, id, index] = event.data;
@@ -71,9 +71,12 @@ catch (_) {
     s.getRegistration(sw)
       .then(r => (r ?? s.register(sw)))
       .then(function ready(r) {
+        c = c && !!s.controller;
         w = (r.installing || r.waiting || r.active);
-        if (w.state === 'activated')
-          done();
+        if (w.state === 'activated') {
+          if (c) done();
+          else location.reload();
+        }
         else
           addListener(w, 'statechange', () => ready(r), { once: true });
       });
