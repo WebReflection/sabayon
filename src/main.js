@@ -69,10 +69,7 @@ catch (_) {
     });
     // use previous registration, if any, before registering it
     s.getRegistration(sw)
-      .then(r => (r ?? s.register(sw).then(r => {
-        r.addEventListener('updatefound', () => location.reload());
-        return r;
-      })))
+      .then(r => (r ?? s.register(sw)))
       .then(function ready(r) {
         c = c && !!s.controller;
         w = (r.installing || r.waiting || r.active);
