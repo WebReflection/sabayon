@@ -15,17 +15,16 @@ export const fetch = event => {
   const { request: r } = event;
   if (r.method === 'POST' && r.url === `${location.href}?sabayon`) {
     stop(event);
-    event.respondWith(r.json().then(async data => {
-      const { promise, resolve } = Promise.withResolvers();
-      const uid = data.join(',');
-      transactions.set(uid, resolve);
-      for (const client of await clients.matchAll())
-        client.postMessage(data);
-      return promise.then(value => new Response(
-        `[${value.join(',')}]`,
-        r.headers,
-      ));
-    }));
+    event.respondWith(
+      new Promise(async resolve => {
+        const data = await r.json();
+        const uid = data.join(',');
+        transactions.set(uid, resolve);
+        for (const client of await clients.matchAll())
+          client.postMessage(data);
+      })
+      .then(value => new Response(`[${value.join(',')}]`, r.headers))
+    );
   }
 };
 
@@ -36,9 +35,10 @@ export const message = event => {
   if (isArray(data) && data.length === 4) {
     const [CHANNEL, id, index, view] = data;
     const uid = [CHANNEL, id, index].join(',');
-    if (transactions.has(uid)) {
+    const transaction = transactions.get(uid);
+    if (transaction) {
       stop(event);
-      transactions.get(uid)(view);
+      transaction(view);
       transactions.delete(uid);
     }
   }
