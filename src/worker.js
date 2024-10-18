@@ -1,5 +1,7 @@
 // (c) Andrea Giammarchi - MIT
 
+import { parse } from '@ungap/raw-json';
+
 import {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
@@ -45,6 +47,10 @@ catch (_) {
 
   const messages = [];
 
+  const asBigInt = (_, value, context) => (
+    context && typeof value === 'number' ? BigInt(context.source) : value
+  );
+
   let CHANNEL = '';
   let SERVICE_WORKER = '';
 
@@ -69,12 +75,14 @@ catch (_) {
   Atomics.wait = (view, index, ...rest) => {
     const [id] = waitAsyncPoly(view, index, ...rest);
     const xhr = new XMLHttpRequest;
-    xhr.responseType = 'json';
     xhr.open('POST', `${SERVICE_WORKER}?sabayon`, false);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(`["${CHANNEL}",${id},${index}]`);
-    const { response } = xhr;
     views.delete(view);
+    const response = view instanceof BigInt64Array ?
+      parse(xhr.responseText, asBigInt) :
+      parse(xhr.responseText)
+    ;
     for (let i = 0; i < response.length; i++) view[i] = response[i];
     return 'ok';
   };

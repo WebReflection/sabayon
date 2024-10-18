@@ -1,12 +1,12 @@
 import {
   Atomics,
-  Int32Array,
+  BigInt64Array,
   SharedArrayBuffer,
   postMessage,
 } from '../../dist/worker.js';
 
-const sb = new SharedArrayBuffer(4);
-const view = new Int32Array(sb);
+const sb = new SharedArrayBuffer(8);
+const view = new BigInt64Array(sb);
 
 console.time('roundtrip');
 postMessage({ some: 'value', view });
@@ -16,5 +16,6 @@ Atomics.wait(view, 0);
 console.timeEnd('wait');
 console.timeEnd('roundtrip');
 
-console.assert(view[0] === 1);
+console.log(view[0]);
+console.assert(view[0] === 9007199254740993n);
 postMessage('ok');
