@@ -1,4 +1,4 @@
-# Atomics.wait sync-blocking in Workers
+# Atomics.wait sync-blocking in Workers - BigInt
 
 This test runs `Atomics.wait` *sync* / *blocking* in the *Worker* thread which is resolved through the *Main* one via `Atomics.notify`.
 
