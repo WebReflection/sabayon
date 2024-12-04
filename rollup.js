@@ -34,4 +34,12 @@ export default [
       file: './dist/worker.js',
     }
   },
+  {
+    input: './src/shared-worker.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/shared-worker.js',
+    }
+  },
 ];

@@ -1,7 +1,7 @@
 import {
   Atomics,
   Worker,
-} from '../../src/main.js';
+} from '../../dist/main.js';
 
 // usage of `serviceWorker` option is mandatory to enable
 // the sync-blocking `Atomics.wait` in workers

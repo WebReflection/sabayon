@@ -19,6 +19,7 @@ let {
   BigInt64Array,
   Int32Array,
   SharedArrayBuffer,
+  SharedWorker,
   Worker,
 } = globalThis;
 
@@ -30,11 +31,14 @@ const asModule = options => ({ ...options, type: 'module' });
 try {
   new SharedArrayBuffer(4);
 
-  Worker = class extends Worker {
+  const Class = Native => class extends Native {
     constructor(url, options) {
       super(url, asModule(options));
     }
-  }
+  };
+
+  if (SharedWorker) SharedWorker = Class(SharedWorker);
+  Worker = Class(Worker);
 
   if (!Atomics.waitAsync)
     Atomics.waitAsync = waitAsyncPatch;
@@ -42,7 +46,10 @@ try {
 catch (_) {
   const CHANNEL = crypto.randomUUID();
 
+  const { defineProperties } = Object;
+
   const sync = new Map;
+  const once = { once: true };
 
   const addListener = (self, type, handler, ...rest) => {
     self.addEventListener(type, handler, ...rest);
@@ -78,7 +85,7 @@ catch (_) {
           else location.reload();
         }
         else
-          addListener(w, 'statechange', () => ready(r), { once: true });
+          addListener(w, 'statechange', () => ready(r), once);
       });
   };
 
@@ -104,7 +111,47 @@ catch (_) {
   BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
+  const message = event => {
+    if (isChannel(event, CHANNEL)) {
+      const [_, ACTION, ...rest] = event.data;
+      switch (ACTION) {
+        case ACTION_NOTIFY: {
+          actionNotify(...rest);
+          break;
+        }
+        case ACTION_WAIT: {
+          actionWait(event, ...rest);
+          break;
+        }
+      }
+    }
+  };
+
   let serviceWorker = null;
+
+  if (SharedWorker) SharedWorker = class extends SharedWorker {
+    constructor(url, options) {
+      const { port } = super(url, asModule(options));
+      const { promise, resolve } = withResolvers();
+      const postMessage = port.postMessage.bind(port);
+      // first message on connect to initialize the port
+      addListener(port, 'message', event => {
+        event.stopImmediatePropagation();
+        postMessage([CHANNEL, ACTION_INIT, options]);
+        resolve();
+      }, once);
+      addListener(port, 'message', message);
+      defineProperties(port, {
+        postMessage: {
+          configurable: true,
+          value: (data, ...rest) => {
+            promise.then(() => postMessage(postData(CHANNEL, data), ...rest));
+          }
+        }
+      }).start();
+    }
+  }
+
   Worker = class extends Worker {
     constructor(url, options) {
       let sw = options?.serviceWorker || '';
@@ -116,27 +163,11 @@ catch (_) {
           register(navigator, sw, resolve);
           serviceWorker = promise;
         }
-        serviceWorker.then(
-          () => super.postMessage([CHANNEL, ACTION_SW])
-        );
+        serviceWorker.then(() => super.postMessage([CHANNEL, ACTION_SW]));
       }
       super(url, asModule(options));
       super.postMessage([CHANNEL, ACTION_INIT, options]);
-      addListener(this, 'message', event => {
-        if (isChannel(event, CHANNEL)) {
-          const [_, ACTION, ...rest] = event.data;
-          switch (ACTION) {
-            case ACTION_NOTIFY: {
-              actionNotify(...rest);
-              break;
-            }
-            case ACTION_WAIT: {
-              actionWait(event, ...rest);
-              break;
-            }
-          }
-        }
-      });
+      addListener(this, 'message', message);
     }
     postMessage(data, ...rest) {
       return super.postMessage(postData(CHANNEL, data), ...rest);
@@ -149,6 +180,7 @@ export {
   /** @type {globalThis.BigInt64Array} */ BigInt64Array,
   /** @type {globalThis.Int32Array} */ Int32Array,
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
+  /** @type {globalThis.SharedWorker} */ SharedWorker,
   /** @type {globalThis.Worker} */ Worker,
   ignore,
   polyfill,
