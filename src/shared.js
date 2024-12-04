@@ -79,12 +79,24 @@ const transferViews = (data, transfer, visited) => {
 };
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics/waitAsync#browser_compatibility
+let intAsyncPatch = 0;
 const waitAsyncPatch = (...args) => ({
-  value: new Promise(resolve => {
-    // encodeURIComponent('onmessage=e=>postMessage(!Atomics.wait(...e.data))')
-    let w = new Worker('data:application/javascript,onmessage%3De%3D%3EpostMessage(!Atomics.wait(...e.data))');
-    w.onmessage = () => resolve('ok');
-    w.postMessage(args);
+  value: new Promise(async resolve => {
+    // fallback to a local file to avoid CSP issues
+    // this file must contain: onmessage=e=>postMessage(!Atomics.wait(...e.data))
+    const url = '/__sabayon_wait_async.js';
+    const data = 'data:application/javascript,onmessage%3De%3D%3EpostMessage(!Atomics.wait(...e.data))';
+    // perform this check only once
+    if (!intAsyncPatch) {
+      const ok = fetch(url, { method: 'HEAD' }).then(r => r.ok, () => false);
+      intAsyncPatch = (await ok) ? 1 : -1;
+    }
+    const worker = new Worker(intAsyncPatch < 0 ? data : url);
+    worker.onmessage = () => {
+      worker.terminate();
+      resolve('ok');
+    };
+    worker.postMessage(args);
   })
 });
 
