@@ -98,18 +98,15 @@ if (SharedWorker) {
   const { defineProperties, entries } = Object;
 
   const fix = (data) => {
-    const patch = [];
     for (const [key, value] of entries(data)) {
-      if (isObject(data)) {
+      if (isObject(value)) {
         const overridden = override(value);
         if (overridden)
-          patch.push([key, overridden]);
-        else if (!isTyped(data))
+          data[key] = overridden;
+        else if (!isTyped(value))
           fix(value);
       }
     }
-    for (const [key, value] of patch)
-      data[key] = value;
   };
 
   const override = value => {
