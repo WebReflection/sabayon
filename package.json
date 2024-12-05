@@ -1,6 +1,6 @@
 {
   "name": "sabayon-shared-worker",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "bin": {
     "sabayon": "cli.cjs"
   },
