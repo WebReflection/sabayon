@@ -4,6 +4,16 @@
 
 <sup>**Social Media Photo by [You Le](https://unsplash.com/@le_y0u) on [Unsplash](https://unsplash.com/)**</sup>
 
+#### A SharedWorker module is on its way ...
+
+There is [a PR](https://github.com/WebReflection/sabayon/pull/7) that enables *SharedArrayBuffer* and *Atomics* even where that shouldn't be possible, namely the *SharedWorker* use case.
+
+For the time being, this has been published on *npm* as `sabayon-shared-worker` which should be a drop-in replacement that also covers *SharedWorker* out of the box.
+
+Feel free to test/experiment with it and let me know, in that PR, if there's anything missing, way slower than before, or buggy, thank you!
+
+- - -
+
 
 ## Usage
 
