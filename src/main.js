@@ -25,7 +25,7 @@ let {
   Worker,
 } = globalThis;
 
-let CHANNEL = '';
+let CHANNEL, sync;
 let ignore = ignoreDirect;
 let polyfill = false;
 
@@ -33,8 +33,6 @@ let { notify, waitAsync } = Atomics;
 if (!waitAsync) waitAsync = waitAsyncPatch;
 Atomics.notify = (...args) => notify(...args);
 Atomics.waitAsync = (...args) => waitAsync(...args);
-
-const sync = new Map;
 
 const addListener = (self, type, handler, ...rest) => {
   self.addEventListener(type, handler, ...rest);
@@ -61,10 +59,11 @@ const message = event => {
 const patchAtomics = () => {
   if (!CHANNEL) {
     CHANNEL = crypto.randomUUID();
+    sync = new Map;
 
     // partial patches for the SharedWorker only case
     // Workers with native SharedArrayBuffer should not
-    // get affected much or penalized, performance wise
+    // be affected much or penalized, performance wise
     const [$notify, $waitAsync] = [notify, waitAsync];
 
     notify = (view, index, ...rest) => {
