@@ -97,16 +97,21 @@ if (SharedWorker) {
   // here a polyfill that works regardless w/ SAB
   const { defineProperties, entries } = Object;
 
-  const fix = (data) => {
-    for (const [key, value] of entries(data)) {
-      if (isObject(value)) {
-        const overridden = override(value);
-        if (overridden)
-          data[key] = overridden;
-        else if (!isTyped(value))
-          fix(value);
-      }
+  const crawl = (data, visited) => {
+    for (const [key, value] of entries(data))
+      data[key] = fix(value, visited);
+  };
+
+  const fix = (value, visited) => {
+    if (isObject(value)) {
+      let data = visited.get(value);
+      if (data) return data;
+      data = override(value);
+      visited.set(value, data || value);
+      if (data) return data;
+      else if (!isTyped(value)) crawl(value, visited);
     }
+    return value;
   };
 
   const override = value => {
@@ -125,17 +130,6 @@ if (SharedWorker) {
     }
   };
 
-  const postFixed = (CHANNEL, data) => {
-    if (isObject(data)) {
-      const overridden = override(data);
-      if (overridden)
-        data = overridden;
-      else if (!isTyped(data))
-        fix(data);
-    }
-    return postData(CHANNEL, data);
-  };
-
   SharedWorker = class extends SharedWorker {
     constructor(url, options) {
       patchAtomics();
@@ -145,7 +139,10 @@ if (SharedWorker) {
       defineProperties(port, {
         postMessage: {
           configurable: true,
-          value: (data, ...rest) => postMessage(postFixed(CHANNEL, data), ...rest)
+          value: (data, ...rest) => postMessage(
+            postData(CHANNEL, fix(data, new Map)),
+            ...rest
+          )
         }
       }).start();
       postMessage([CHANNEL, ACTION_INIT, options]);
