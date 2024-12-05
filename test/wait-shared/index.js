@@ -10,6 +10,7 @@ const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
 
 console.time('roundtrip');
+w.port.start();
 w.port.postMessage({ some: 'value', view });
 
 console.time('waitAsync');

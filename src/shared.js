@@ -18,6 +18,8 @@ const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, d
 const withResolvers = () => Promise.withResolvers();
 
 let id = 0;
+const idPlus = () => id++;
+
 const views = new Map;
 const extend = (Class, SharedArrayBuffer) => class extends Class {
   constructor(value, ...rest) {
@@ -28,6 +30,7 @@ const extend = (Class, SharedArrayBuffer) => class extends Class {
 };
 
 const ignoreList = new WeakSet;
+const sharedWorker = new WeakMap;
 
 /**
  * @template {T}
@@ -64,11 +67,13 @@ const isObject = value => (
   !ignoreList.has(value)
 );
 
+const isTyped = data => data instanceof TypedArray || data instanceof ArrayBuffer;
+
 const transferred = new WeakMap;
 const transferViews = (data, transfer, visited) => {
   if (views.has(data))
     transfer.set(data, views.get(data)[0]);
-  else if (!(data instanceof TypedArray || data instanceof ArrayBuffer)) {
+  else if (!isTyped(data)) {
     for (const value of values(data)) {
       if (isObject(value) && !visited.has(value)) {
         visited.add(value);
@@ -110,6 +115,11 @@ const actionNotify = (_view, _id, _index) => {
   for (const [view, [id, index, { resolve }]] of views) {
     if (_id === id && _index === index) {
       for (let i = 0; i < _view.length; i++) view[i] = _view[i];
+      const clone = sharedWorker.get(view);
+      if (clone) {
+        sharedWorker.delete(view);
+        views.delete(clone);
+      }
       views.delete(view);
       resolve('ok');
       break;
@@ -136,6 +146,7 @@ export {
 
   ArrayBuffer, Atomics, TypedArray,
 
+  idPlus, sharedWorker,
   actionNotify, actionWait,
   getData, postData,
   ignoreDirect, ignorePatch,
@@ -143,7 +154,7 @@ export {
 
   dispatch,
   extend,
-  isChannel,
+  isChannel, isObject, isTyped,
   views,
   withResolvers,
 };

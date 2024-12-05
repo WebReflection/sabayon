@@ -7,7 +7,7 @@ import {
 
   actionNotify, actionWait,
   getData, postData,
-  ignoreDirect, ignorePatch,
+  ignorePatch,
   waitAsyncPatch, waitAsyncPoly,
 
   extend,
@@ -21,77 +21,67 @@ let {
   SharedArrayBuffer,
 } = globalThis;
 
-let ignore = ignoreDirect;
-let polyfill = false;
+const ignore = ignorePatch;
+const polyfill = true;
 
-try {
-  new SharedArrayBuffer(4);
+if (!Atomics.waitAsync)
+  Atomics.waitAsync = waitAsyncPatch;
 
-  if (!Atomics.waitAsync)
-    Atomics.waitAsync = waitAsyncPatch;
-}
-catch (_) {
+const { defineProperties } = Object;
+const portDetails = new WeakMap;
 
-  const { defineProperties } = Object;
-  const portDetails = new WeakMap;
-
-  addEventListener('connect', ({ ports }) => {
-    for (const port of ports) {
-      let CHANNEL = '';
-      const { promise, resolve } = withResolvers();
-      const postMessage = port.postMessage.bind(port);
-      port.addEventListener('message', event => {
-        if (isChannel(event, CHANNEL)) {
-          const [_, ACTION, ...rest] = event.data;
-          switch (ACTION) {
-            case ACTION_INIT: {
-              CHANNEL = _;
-              portDetails.set(port, [CHANNEL, postMessage]);
-              resolve();
-              break;
-            }
-            case ACTION_NOTIFY: {
-              actionNotify(...rest);
-              break;
-            }
-            case ACTION_WAIT: {
-              actionWait(event, ...rest);
-              break;
-            }
+addEventListener('connect', ({ ports }) => {
+  for (const port of ports) {
+    let CHANNEL = '';
+    const { promise, resolve } = withResolvers();
+    const postMessage = port.postMessage.bind(port);
+    port.addEventListener('message', event => {
+      if (isChannel(event, CHANNEL)) {
+        const [_, ACTION, ...rest] = event.data;
+        switch (ACTION) {
+          case ACTION_INIT: {
+            CHANNEL = _;
+            portDetails.set(port, [CHANNEL, postMessage]);
+            resolve();
+            break;
+          }
+          case ACTION_NOTIFY: {
+            actionNotify(...rest);
+            break;
+          }
+          case ACTION_WAIT: {
+            actionWait(event, ...rest);
+            break;
           }
         }
-      });
-      defineProperties(port, {
-        postMessage: {
-          configurable: true,
-          value: (data, ...rest) => {
-            promise.then(() => postMessage(postData(CHANNEL, data), ...rest));
-          },
-        }
-      }).start();
-      postMessage(ACTION_INIT);
-    }
-  });
+      }
+    });
+    defineProperties(port, {
+      postMessage: {
+        configurable: true,
+        value: (data, ...rest) => {
+          promise.then(() => postMessage(postData(CHANNEL, data), ...rest));
+        },
+      }
+    }).start();
+  }
+});
 
-  SharedArrayBuffer = class extends ArrayBuffer {}
-  BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
-  Int32Array = extend(Int32Array, SharedArrayBuffer);
+SharedArrayBuffer = class extends ArrayBuffer {}
+BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
+Int32Array = extend(Int32Array, SharedArrayBuffer);
 
-  ignore = ignorePatch;
-  polyfill = true;
+Atomics.notify = (view, index) => {
+  const [id, port] = getData(view);
+  const [CHANNEL, postMessage] = portDetails.get(port);
+  postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
+  return 0;
+};
 
-  Atomics.notify = (view, index) => {
-    const [id, port] = getData(view);
-    const [CHANNEL, postMessage] = portDetails.get(port);
-    postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
-    return 0;
-  };
-
-  Atomics.waitAsync = (...args) => {
-    const [_, value] = waitAsyncPoly(...args);
-    return { value };
-  };
-}
+Atomics.waitAsync = (...args) => {
+  const [_, value] = waitAsyncPoly(...args);
+  return { value };
+};
 
 export {
   /** @type {globalThis.Atomics} */ Atomics,
