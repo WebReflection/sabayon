@@ -1,6 +1,6 @@
 {
-  "name": "sabayon",
-  "version": "0.6.1",
+  "name": "sabayon-shared-worker",
+  "version": "0.6.4",
   "bin": {
     "sabayon": "cli.cjs"
   },
@@ -28,6 +28,7 @@
     "./main": "./src/main.js",
     "./worker": "./src/worker.js",
     "./shared": "./src/shared.js",
+    "./shared-worker": "./src/shared-worker.js",
     "./sw": "./src/sw.js",
     "./sw-listeners": "./src/sw-listeners.js",
     "./package.json": "./package.json"

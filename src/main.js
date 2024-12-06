@@ -5,13 +5,15 @@ import {
 
   ArrayBuffer, Atomics,
 
+  idPlus, sharedWorker,
   actionNotify, actionWait,
   getData, postData,
   ignoreDirect, ignorePatch,
   waitAsyncPatch, waitAsyncPoly,
 
   extend,
-  isChannel,
+  isChannel, isObject, isTyped,
+  views,
   withResolvers,
 } from './shared.js';
 
@@ -19,13 +21,133 @@ let {
   BigInt64Array,
   Int32Array,
   SharedArrayBuffer,
+  SharedWorker,
   Worker,
 } = globalThis;
 
+let CHANNEL, sync;
 let ignore = ignoreDirect;
 let polyfill = false;
 
+let { notify, waitAsync } = Atomics;
+if (!waitAsync) waitAsync = waitAsyncPatch;
+Atomics.notify = (...args) => notify(...args);
+Atomics.waitAsync = (...args) => waitAsync(...args);
+
+const addListener = (self, type, handler, ...rest) => {
+  self.addEventListener(type, handler, ...rest);
+};
+
 const asModule = options => ({ ...options, type: 'module' });
+
+const message = event => {
+  if (isChannel(event, CHANNEL)) {
+    const [_, ACTION, ...rest] = event.data;
+    switch (ACTION) {
+      case ACTION_NOTIFY: {
+        actionNotify(...rest);
+        break;
+      }
+      case ACTION_WAIT: {
+        actionWait(event, ...rest);
+        break;
+      }
+    }
+  }
+};
+
+const patchAtomics = () => {
+  if (!CHANNEL) {
+    CHANNEL = crypto.randomUUID();
+    sync = new Map;
+
+    // partial patches for the SharedWorker only case
+    // Workers with native SharedArrayBuffer should not
+    // be affected much or penalized, performance wise
+    const [$notify, $waitAsync] = [notify, waitAsync];
+
+    notify = (view, index, ...rest) => {
+      const data = getData(view);
+      if (data) {
+        const [id, worker] = data;
+        const uid = [id, index].join(',');
+        const known = sync.get(uid);
+        if (known) known(view);
+        else sync.set(uid, view);
+        worker.postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
+        return 0;
+      }
+      else return $notify(view, index, ...rest);
+    };
+  
+    waitAsync = (view, ...rest) => {
+      if (views.has(view)) {
+        const [_, value] = waitAsyncPoly(view, ...rest);
+        return { value };
+      }
+      else return $waitAsync(view, ...rest);
+    };
+  }
+};
+
+if (SharedWorker) {
+  // did you know? SharedArrayBuffer silently fails
+  // when posted to a SharedWorker's port ... so
+  // here a polyfill that works regardless w/ SAB
+  const { defineProperties, entries } = Object;
+
+  const crawl = (data, visited) => {
+    for (const [key, value] of entries(data))
+      data[key] = fix(value, visited);
+  };
+
+  const fix = (value, visited) => {
+    if (isObject(value)) {
+      let data = visited.get(value);
+      if (data) return data;
+      data = override(value);
+      visited.set(value, data || value);
+      if (data) return data;
+      else if (!isTyped(value)) crawl(value, visited);
+    }
+    return value;
+  };
+
+  const override = value => {
+    if (
+      !views.has(value) &&
+      (value instanceof Int32Array || value instanceof BigInt64Array) &&
+      !(value.buffer instanceof ArrayBuffer)
+    ) {
+      const clone = value.slice(0);
+      const details = [idPlus(), 0, withResolvers()];
+      // set SAB before clone to fix it once clone is resolved
+      views.set(value, details);
+      views.set(clone, details);
+      sharedWorker.set(value, clone);
+      return clone;
+    }
+  };
+
+  SharedWorker = class extends SharedWorker {
+    constructor(url, options) {
+      patchAtomics();
+      const { port } = super(url, { name: 'sabayon', ...asModule(options) });
+      const postMessage = port.postMessage.bind(port);
+      addListener(port, 'message', message);
+      defineProperties(port, {
+        postMessage: {
+          configurable: true,
+          value: (data, ...rest) => postMessage(
+            postData(CHANNEL, fix(data, new Map)),
+            ...rest
+          )
+        }
+      }).start();
+      postMessage([CHANNEL, ACTION_INIT, options]);
+    }
+  };
+}
 
 try {
   new SharedArrayBuffer(4);
@@ -34,19 +156,17 @@ try {
     constructor(url, options) {
       super(url, asModule(options));
     }
-  }
-
-  if (!Atomics.waitAsync)
-    Atomics.waitAsync = waitAsyncPatch;
+  };
 }
 catch (_) {
-  const CHANNEL = crypto.randomUUID();
+  ignore = ignorePatch;
+  polyfill = true;
 
-  const sync = new Map;
+  patchAtomics();
 
-  const addListener = (self, type, handler, ...rest) => {
-    self.addEventListener(type, handler, ...rest);
-  };
+  SharedArrayBuffer = class extends ArrayBuffer {}
+  BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
+  Int32Array = extend(Int32Array, SharedArrayBuffer);
 
   const register = ({ serviceWorker: s }, sw, done) => {
     let w, c = true;
@@ -82,28 +202,6 @@ catch (_) {
       });
   };
 
-  ignore = ignorePatch;
-  polyfill = true;
-
-  Atomics.notify = (view, index) => {
-    const [id, worker] = getData(view);
-    const uid = [id, index].join(',');
-    const known = sync.get(uid);
-    if (known) known(view);
-    else sync.set(uid, view);
-    worker.postMessage([CHANNEL, ACTION_NOTIFY, view, id, index]);
-    return 0;
-  };
-
-  Atomics.waitAsync = (view, ...rest) => {
-    const [_, value] = waitAsyncPoly(view, ...rest);
-    return { value };
-  };
-
-  SharedArrayBuffer = class extends ArrayBuffer {}
-  BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
-  Int32Array = extend(Int32Array, SharedArrayBuffer);
-
   let serviceWorker = null;
   Worker = class extends Worker {
     constructor(url, options) {
@@ -116,27 +214,11 @@ catch (_) {
           register(navigator, sw, resolve);
           serviceWorker = promise;
         }
-        serviceWorker.then(
-          () => super.postMessage([CHANNEL, ACTION_SW])
-        );
+        serviceWorker.then(() => super.postMessage([CHANNEL, ACTION_SW]));
       }
       super(url, asModule(options));
       super.postMessage([CHANNEL, ACTION_INIT, options]);
-      addListener(this, 'message', event => {
-        if (isChannel(event, CHANNEL)) {
-          const [_, ACTION, ...rest] = event.data;
-          switch (ACTION) {
-            case ACTION_NOTIFY: {
-              actionNotify(...rest);
-              break;
-            }
-            case ACTION_WAIT: {
-              actionWait(event, ...rest);
-              break;
-            }
-          }
-        }
-      });
+      addListener(this, 'message', message);
     }
     postMessage(data, ...rest) {
       return super.postMessage(postData(CHANNEL, data), ...rest);
@@ -149,6 +231,7 @@ export {
   /** @type {globalThis.BigInt64Array} */ BigInt64Array,
   /** @type {globalThis.Int32Array} */ Int32Array,
   /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
+  /** @type {globalThis.SharedWorker} */ SharedWorker,
   /** @type {globalThis.Worker} */ Worker,
   ignore,
   polyfill,

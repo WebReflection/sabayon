@@ -3,7 +3,7 @@ import {
   Int32Array,
   SharedArrayBuffer,
   postMessage,
-} from '../../src/worker.js';
+} from '../../dist/worker.js';
 
 const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
