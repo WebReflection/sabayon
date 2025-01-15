@@ -10,7 +10,7 @@ const { isArray } = Array;
 const { create, getPrototypeOf, values } = Object;
 
 const TypedArray = getPrototypeOf(Int32Array);
-const Atomics = create($Atomics);
+const Atomics = /** @type {globalThis.Atomics} */(create($Atomics));
 
 const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, data) =>
   currentTarget.dispatchEvent(new MessageEvent(type, { data, origin, lastEventId, source, ports }));

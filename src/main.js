@@ -145,11 +145,11 @@ catch (_) {
 }
 
 export {
-  /** @type {globalThis.Atomics} */ Atomics,
-  /** @type {globalThis.BigInt64Array} */ BigInt64Array,
-  /** @type {globalThis.Int32Array} */ Int32Array,
-  /** @type {globalThis.SharedArrayBuffer} */ SharedArrayBuffer,
-  /** @type {globalThis.Worker} */ Worker,
+  Atomics,
+  BigInt64Array,
+  Int32Array,
+  SharedArrayBuffer,
+  Worker,
   ignore,
   polyfill,
 };
