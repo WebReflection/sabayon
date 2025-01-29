@@ -17,10 +17,10 @@
   "license": "MIT",
   "description": "SharedArrayBuffer always on",
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "mini-coi": "^0.4.2",
-    "rollup": "^4.24.0",
+    "rollup": "^4.32.1",
     "static-handler": "^0.5.3"
   },
   "type": "module",
@@ -41,6 +41,6 @@
   },
   "homepage": "https://github.com/WebReflection/sabayon#readme",
   "dependencies": {
-    "@ungap/raw-json": "^0.3.7"
+    "@ungap/raw-json": "^0.4.2"
   }
 }
