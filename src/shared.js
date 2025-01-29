@@ -109,7 +109,7 @@ const waitAsyncPoly = (view, index) => {
 const actionNotify = (_view, _id, _index) => {
   for (const [view, [id, index, { resolve }]] of views) {
     if (_id === id && _index === index) {
-      for (let i = 0; i < _view.length; i++) view[i] = _view[i];
+      view.set(_view);
       views.delete(view);
       resolve('ok');
       break;

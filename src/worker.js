@@ -83,7 +83,7 @@ catch (_) {
       parse(xhr.responseText, asBigInt) :
       parse(xhr.responseText)
     ;
-    for (let i = 0; i < response.length; i++) view[i] = response[i];
+    view.set(response);
     return 'ok';
   };
 
