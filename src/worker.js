@@ -1,6 +1,6 @@
 // (c) Andrea Giammarchi - MIT
 
-import { parse } from '@ungap/raw-json';
+import { parse, reviver } from '@ungap/raw-json';
 
 import {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
@@ -47,10 +47,6 @@ catch (_) {
 
   const messages = [];
 
-  const asBigInt = (_, value, context) => (
-    context && typeof value === 'number' ? BigInt(context.source) : value
-  );
-
   let CHANNEL = '';
   let SERVICE_WORKER = '';
 
@@ -80,7 +76,7 @@ catch (_) {
     xhr.send(`["${CHANNEL}",${id},${index}]`);
     views.delete(view);
     const response = view instanceof BigInt64Array ?
-      parse(xhr.responseText, asBigInt) :
+      parse(xhr.responseText, reviver) :
       parse(xhr.responseText)
     ;
     view.set(response);

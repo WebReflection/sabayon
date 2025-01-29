@@ -23,7 +23,7 @@ To see more examples, please check the test folder:
 
   * [main async-waiting a worker](./test/wait-async/)
   * [worker async-waiting the main](./test/async-wait/)
-  * [worker sync-waiting the main](./test/wait-big/)
+  * [worker sync-waiting the main](./test/wait-int/)
 
 Remember to run a local server to test these modules, or check the **[live test page](https://webreflection.github.io/sabayon/test/)**.
 
