@@ -34,4 +34,28 @@ export default [
       file: './dist/worker.js',
     }
   },
+  {
+    input: './src/light/main.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/light/main.js',
+    }
+  },
+  {
+    input: './src/light/sab.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/light/sab.js',
+    }
+  },
+  {
+    input: './src/light/worker.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/light/worker.js',
+    }
+  },
 ];
