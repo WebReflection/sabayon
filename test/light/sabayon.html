@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module">
+import { encoder } from 'https://esm.run/buffered-clone@0.7.1-next.8/encoder';
+import { Atomics, Worker } from '../../dist/main.js';
+
+const encode = encoder({
+  useUTF16: true,
+  byteOffset: 4,
+  byteLength: 0x10000,
+  buffer: new ArrayBuffer(0)
+});
+
+const worker = new URL('./sabayon.js', location);
+const encoded = new WeakMap;
+
+for (const w of [
+  new Worker(
+    worker,
+    { type: 'module' }
+  ),
+  // new Worker(
+  //   URL.createObjectURL(
+  //     new Blob([`import '${worker}';`], { type: 'text/javascript' })
+  //   ),
+  //   { type: 'module' }
+  // ),
+]) {
+  w.addEventListener('message', event => {
+    const data = { some: { generic: 'data' }, with: [1,2,3,4,5] };
+    const [retrieve, view] = event.data;
+    if (retrieve) {
+      const binary = encoded.get(w);
+      encoded.delete(w);
+      const ui8a = new Uint8Array(view.buffer, 4);
+      for (let i = 0; i < binary.length; i++)
+        ui8a[i] = binary[i];
+    }
+    else {
+      const binary = encode(data);
+      encoded.set(w, binary);
+      view[1] = binary.length;
+    }
+    view[0] = 1;
+    Atomics.notify(view, 0);
+  });
+}
+    </script>
+</head>
+</html>
