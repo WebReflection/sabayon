@@ -35,27 +35,43 @@ export default [
     }
   },
   {
-    input: './src/light/main.js',
+    input: './src/lite/main.js',
     plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
     output: {
       esModule: true,
-      file: './dist/light/main.js',
+      file: './dist/lite/main.js',
     }
   },
   {
-    input: './src/light/sab.js',
+    input: './src/lite/sab.js',
     plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
     output: {
       esModule: true,
-      file: './dist/light/sab.js',
+      file: './dist/lite/sab.js',
     }
   },
   {
-    input: './src/light/worker.js',
+    input: './src/lite/worker.js',
     plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
     output: {
       esModule: true,
-      file: './dist/light/worker.js',
+      file: './dist/lite/worker.js',
+    }
+  },
+  {
+    input: './src/lite/sw.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/lite/sw.js',
+    }
+  },
+  {
+    input: './src/lite/sw.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './test/lite/sw.js',
     }
   },
 ];

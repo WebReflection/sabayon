@@ -1,19 +1,35 @@
-// (c) Andrea Giammarchi - MIT
+//@ts-check
+
+
+try {
+  //@ts-ignore due valid options not recognized
+  new SharedArrayBuffer(4, { maxByteLength: 8 });
+}
+catch (_) {
+}
+
+//@ts-check
+
 
 const { isArray } = Array;
 
-const transactions = new Map;
-
+/**
+ * @param {MessageEvent} event
+ */
 const stop = event => {
   event.stopImmediatePropagation();
   event.preventDefault();
 };
 
+const url = `${location.href}?sabayon/lite`;
+
+const transactions = new Map;
+
 const activate = e => e.waitUntil(clients.claim());
 
 const fetch = event => {
   const { request: r } = event;
-  if (r.method === 'POST' && r.url === `${location.href}?sabayon`) {
+  if (r.method === 'POST' && r.url === url) {
     stop(event);
     event.respondWith(
       new Promise(async resolve => {
@@ -32,9 +48,8 @@ const install = () => skipWaiting();
 
 const message = event => {
   const { data } = event;
-  if (isArray(data) && data.length === 4) {
-    const [CHANNEL, id, index, view] = data;
-    const uid = [CHANNEL, id, index].join(',');
+  if (isArray(data) && data.length === 2) {
+    const [uid, view] = data;
     const transaction = transactions.get(uid);
     if (transaction) {
       stop(event);
@@ -51,9 +66,6 @@ var events = /*#__PURE__*/Object.freeze({
   install: install,
   message: message
 });
-
-// (c) Andrea Giammarchi - MIT
-
 
 for (const type in events)
   addEventListener(type, events[type]);

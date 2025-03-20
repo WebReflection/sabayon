@@ -1,5 +1,5 @@
 import { decoder } from 'https://esm.run/buffered-clone@0.7.1-next.8/decoder';
-import { Atomics, Int32Array, SharedArrayBuffer, native as ignore, postMessage } from '../../dist/light/worker.js';
+import { Atomics, Int32Array, SharedArrayBuffer, native as ignore, postMessage } from '../../dist/lite/worker.js';
 
 const native = false;
 

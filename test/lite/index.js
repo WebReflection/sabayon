@@ -1,7 +1,9 @@
 import { decoder } from 'https://esm.run/buffered-clone@0.7.1-next.8/decoder';
-import { Atomics, Int32Array, SharedArrayBuffer, native as ignore, postMessage } from '../../dist/light/worker.js';
+import { Atomics, Int32Array, SharedArrayBuffer, ready, native as ignore, postMessage } from '../../dist/lite/worker.js';
 
-const native = false;
+await ready;
+
+const native = true;
 
 const decode = decoder({
   useUTF16: true,
@@ -18,7 +20,7 @@ let view = new Int32Array(
 console.log('Sabayon Light', ignore);
 
 console.time('total');
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 1; i++) {
   console.time('roundtrip');
   postMessage(view);
   if (native)

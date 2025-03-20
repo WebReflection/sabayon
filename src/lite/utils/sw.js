@@ -1,19 +1,14 @@
-// (c) Andrea Giammarchi - MIT
+import { isArray, stop } from './shared';
 
-const { isArray } = Array;
+const url = `${location.href}?sabayon/lite`;
 
 const transactions = new Map;
 
-const stop = event => {
-  event.stopImmediatePropagation();
-  event.preventDefault();
-};
+export const activate = e => e.waitUntil(clients.claim());
 
-const activate = e => e.waitUntil(clients.claim());
-
-const fetch = event => {
+export const fetch = event => {
   const { request: r } = event;
-  if (r.method === 'POST' && r.url === `${location.href}?sabayon`) {
+  if (r.method === 'POST' && r.url === url) {
     stop(event);
     event.respondWith(
       new Promise(async resolve => {
@@ -28,13 +23,12 @@ const fetch = event => {
   }
 };
 
-const install = () => skipWaiting();
+export const install = () => skipWaiting();
 
-const message = event => {
+export const message = event => {
   const { data } = event;
-  if (isArray(data) && data.length === 4) {
-    const [CHANNEL, id, index, view] = data;
-    const uid = [CHANNEL, id, index].join(',');
+  if (isArray(data) && data.length === 2) {
+    const [uid, view] = data;
     const transaction = transactions.get(uid);
     if (transaction) {
       stop(event);
@@ -43,5 +37,3 @@ const message = event => {
     }
   }
 };
-
-export { activate, fetch, install, message };

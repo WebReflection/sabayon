@@ -20,17 +20,23 @@ let {
   postMessage: pM
 } = globalThis;
 
+let ready = Promise.resolve();
+
 if (!native) {
+  const { parse } = JSON;
   const { promise, resolve } = withResolvers();
 
   const handler = new Handler('');
   const _ = mitm(handler);
 
+  let SERVICE_WORKER = '';
+  ready = promise;
+
   addEventListener(
     'message',
     event => {
       stop(event);
-      handler.id = event.data;
+      [handler.id, SERVICE_WORKER] = event.data;
       resolve();
     },
     { once: true }
@@ -65,6 +71,19 @@ if (!native) {
   A = create(A, {
     // TODO: currently only main notifies workers
     // notify: asDescriptorValue((...args) => handler.notify(...args)),
+    wait: asDescriptorValue((view, index, ...rest) => {
+      if (!handler.id) throw new Error('Worker is not ready');
+      if (!SERVICE_WORKER) throw new Error('ServiceWorker not available');
+      const id = _.id(view);
+      const xhr = new XMLHttpRequest;
+      xhr.open('POST', `${SERVICE_WORKER}?sabayon/lite`, false);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(`["${handler.id}",${id}]`);
+      new Uint8Array(view.buffer).set(
+        new Uint8Array(parse(xhr.responseText))
+      );
+      return 'ok';
+    }),
     waitAsync: asDescriptorValue((view, index, value, timeout = Infinity) => ({
       async: true,
       value: promise.then(waitAsync(view, _))
@@ -83,7 +102,8 @@ export {
   I32 as Int32Array,
   I64 as BigInt64Array,
   native,
-  pM as postMessage
+  pM as postMessage,
+  ready,
 };
 
 export { MessageChannel } from './message-channel.js';
