@@ -46,24 +46,19 @@ const fixRest = (buffer, rest) => {
 };
 
 export default handler => {
-  const resolve = ({ id, value }) => {
-    const { buffer, resolve } = ids.get(id);
-    ids.delete(id);
-    promises.delete(buffer);
-    resolve(value);
-  };
   const promises = new Map;
   const ids = new Map;
   let id = 0;
   return {
-    resolve,
-    id: ({ buffer }) => promises.get(buffer).id,
-    buffer: id => ids.get(id).buffer,
-    resolved: ({ buffer }) => promises.get(buffer).promise,
+    resolved: ({ buffer }) => promises.get(buffer),
     listener(event) {
       if (isChannel(event.data, handler.id)) {
         stop(event);
-        resolve(event.data[1]);
+        const { id, value } = event.data[1];
+        const { buffer, resolve } = ids.get(id);
+        ids.delete(id);
+        promises.delete(buffer);
+        resolve(value);
       }
     },
     send(postMessage, data, rest) {
@@ -73,7 +68,7 @@ export default handler => {
         const { buffer, path } = found;
         fixRest(buffer, rest);
         data = [handler.id, { id, path, value: data }];
-        promises.set(buffer, { id, promise });
+        promises.set(buffer, promise);
         ids.set(id++, { buffer, resolve });
       }
       postMessage(data, ...rest);

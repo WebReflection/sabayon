@@ -58,20 +58,4 @@ export default [
       file: './dist/lite/worker.js',
     }
   },
-  {
-    input: './src/lite/sw.js',
-    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
-    output: {
-      esModule: true,
-      file: './dist/lite/sw.js',
-    }
-  },
-  {
-    input: './src/lite/sw.js',
-    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
-    output: {
-      esModule: true,
-      file: './test/lite/sw.js',
-    }
-  },
 ];

@@ -19,10 +19,7 @@ const worker = new URL('./index.js', location);
 for (const w of [
   new Worker(
     worker,
-    {
-      type: 'module',
-      serviceWorker: './sw.js'
-    }
+    { type: 'module' }
   ),
   // new Worker(
   //   URL.createObjectURL(
@@ -32,8 +29,6 @@ for (const w of [
   // ),
 ]) {
   w.addEventListener('message', event => {
-    console.log('RECEIVED EVENT', event.data);
-    debugger;
     const data = { some: { generic: 'data' }, with: [1,2,3,4,5] };
     const view = event.data;
     encode(data, view.buffer);
