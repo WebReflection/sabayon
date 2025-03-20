@@ -30,9 +30,9 @@
     "./shared": "./src/shared.js",
     "./sw": "./src/sw.js",
     "./sw-listeners": "./src/sw-listeners.js",
-    "./light/main": "./src/light/main.js",
-    "./light/sab": "./src/light/sab.js",
-    "./light/worker": "./src/light/worker.js",
+    "./lite/main": "./src/lite/main.js",
+    "./lite/sab": "./src/lite/sab.js",
+    "./lite/worker": "./src/lite/worker.js",
     "./package.json": "./package.json"
   },
   "repository": {
