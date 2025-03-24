@@ -70,11 +70,6 @@ if (!native) {
       value: promise.then(waitAsync(view, _))
     }))
   });
-
-  // not really needed but in case brand check
-  // for specialized classes needs to happen
-  I32 = class extends I32 {}
-  I64 = class extends I64 {}
 }
 
 export {

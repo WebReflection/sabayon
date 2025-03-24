@@ -17,12 +17,12 @@ export class Handler {
         path.reduce(find, value),
         SharedArrayBuffer.prototype
       );
-      toBeNotified.set(buffer, [currentTarget, id]);
+      toBeNotified.set(buffer, [id, currentTarget]);
       defineProperty(event, 'data', { value });
     }
   }
   notify({ buffer }, index, count = Infinity) {
-    const [port, id] = toBeNotified.get(buffer);
+    const [id, port] = toBeNotified.get(buffer);
     toBeNotified.delete(buffer);
     port.postMessage([this.id, { id, value: buffer }], [buffer]);
   }
