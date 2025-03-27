@@ -58,4 +58,12 @@ export default [
       file: './dist/lite/worker.js',
     }
   },
+  {
+    input: './src/lite/utils/shared.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/lite/utils.js',
+    }
+  },
 ];
