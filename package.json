@@ -5,7 +5,7 @@
     "sabayon": "cli.cjs"
   },
   "scripts": {
-    "build": "rollup --config rollup.js && node cli.cjs ./test/sw.js",
+    "build": "rollup --config rollup.js && node cli.cjs ./test/sw.js && node cli.cjs --polyfill ./test/sw-polyfill.js",
     "coi": "mini-coi .",
     "server": "static-handler ."
   },
@@ -26,6 +26,9 @@
   "type": "module",
   "exports": {
     "./main": "./src/main.js",
+    "./polyfill": "./dist/polyfill.js",
+    "./polyfill-sw": "./dist/polyfill-sw.js",
+    "./polyfill-sw-listeners": "./src/polyfill/sw-listeners.js",
     "./worker": "./src/worker.js",
     "./shared": "./src/shared.js",
     "./sw": "./src/sw.js",
@@ -45,6 +48,8 @@
   },
   "homepage": "https://github.com/WebReflection/sabayon#readme",
   "dependencies": {
-    "@ungap/raw-json": "^0.4.2"
+    "@ungap/raw-json": "^0.4.2",
+    "coincident": "^3.0.2",
+    "next-resolver": "^0.1.2"
   }
 }

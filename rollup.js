@@ -1,6 +1,9 @@
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 
+// import { writeFileSync } from 'fs';
+// writeFileSync('./src/polyfill/bid.js', `// ⚠️ AUTOMATED ⚠️\nexport default '${crypto.randomUUID()}';\n`);
+
 export default [
   {
     input: './src/main.js',
@@ -64,6 +67,22 @@ export default [
     output: {
       esModule: true,
       file: './dist/lite/utils.js',
+    }
+  },
+  {
+    input: './src/polyfill/index.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/polyfill.js',
+    }
+  },
+  {
+    input: './src/polyfill/sw.js',
+    plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
+    output: {
+      esModule: true,
+      file: './dist/polyfill-sw.js',
     }
   },
 ];
