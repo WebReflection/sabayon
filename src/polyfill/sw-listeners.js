@@ -5,6 +5,7 @@ import nextResolver from 'next-resolver';
 import BROADCAST_CHANNEL_UID from './bid.js';
 
 const [next, resolve] = nextResolver();
+const { parse } = JSON;
 
 export const activate = e => e.waitUntil(clients.claim());
 export const install = () => skipWaiting();
@@ -20,7 +21,7 @@ export const fetch = async event => {
     const [swid, promise] = next();
     const resolve = value => new Response(`[${[].join.call(value, ',')}]`, r.headers);
     event.respondWith(promise.then(resolve, resolve));
-    const [wid, vid] = JSON.parse(await r.text());
+    const [wid, vid] = parse(await r.text());
     bc.postMessage([swid, wid, vid]);
   }
 };

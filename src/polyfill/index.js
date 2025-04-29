@@ -61,13 +61,14 @@ if (!native) {
     );
 
     const { wait } = Atomics;
+    const { parse, stringify } = JSON;
     Atomics.wait = (view, ..._) => {
       if (view.buffer instanceof SharedArrayBuffer) {
         const xhr = new XMLHttpRequest;
         xhr.open('POST', `${SW}?sabayon`, false);
         xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify([UID, views.get(view)]));
-        view.set(JSON.parse(xhr.responseText));
+        xhr.send(stringify([UID, views.get(view)]));
+        view.set(parse(xhr.responseText));
         views.delete(view);
         return 'ok';
       }
