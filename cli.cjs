@@ -9,11 +9,13 @@ const cwd = process.cwd();
 
 if (!args.length || args[0] === '--help') help();
 else {
+  let polyfill = args[0] === '--polyfill';
+  if (polyfill) args.shift();
   const file = resolve(cwd, args[0]);
   const stats = statSync(dirname(file), {throwIfNoEntry: false});
   if (stats && stats.isDirectory()) {
-    writeFileSync(file, readFileSync(join(__dirname, 'dist', 'sw.js')));
-    console.log(`Added Service Worker as \x1b[1m${file}\x1b[0m`);
+    writeFileSync(file, readFileSync(join(__dirname, 'dist', polyfill ? 'polyfill-sw.js' : 'sw.js')));
+    console.log(`Added Service Worker ${polyfill ? 'polyfill' : ''} as \x1b[1m${file}\x1b[0m`);
     process.exit(0);
   }
   else {
@@ -31,6 +33,9 @@ function help() {
 
     \x1b[2m# save sabayon/sw export as ./public/sw.js\x1b[0m
     sabayon ./public/sw.js
+
+    \x1b[2m# save sabayon/polyfill export as ./public/sw.js\x1b[0m
+    sabayon --polyfill ./public/sw.js
 `
   );
 }

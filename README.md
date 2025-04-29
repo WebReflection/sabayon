@@ -4,13 +4,58 @@
 
 <sup>**Social Media Photo by [You Le](https://unsplash.com/@le_y0u) on [Unsplash](https://unsplash.com/)**</sup>
 
-#### A SharedWorker module is on its way ...
+### 📢 A new Polyfill approach
 
-There is [a PR](https://github.com/WebReflection/sabayon/pull/7) that enables *SharedArrayBuffer* and *Atomics* even where that shouldn't be possible, namely the *SharedWorker* use case.
+`sabayon/polyfill` and its `sabayon/polyfill-sw-listeners` plus `sabayon/polyfill-sw` ust landed, with a whole new *polyfill* like approach for the `Atomics.wait` **synchronous** dance between a *Worker* and its *Main* thread.
 
-For the time being, this has been published on *npm* as `sabayon-shared-worker` which should be a drop-in replacement that also covers *SharedWorker* out of the box.
+```js
+// Main thread
+import sabayon from 'sabayon/polyfill';
+// provide the ServiceWorker file
+sabayon('/polyfill-sw.js');
+// that's it 🥳
 
-Feel free to test/experiment with it and let me know, in that PR, if there's anything missing, way slower than before, or buggy, thank you!
+
+// Worker thread
+import 'sabayon/polyfill';
+// that's it 🥳
+```
+
+The new approach is based on:
+
+  * global patches to provide a seamless experience with *SharedArrayBuffer* and *Atomics.wait* (Worker) plus *Atomics.notify* (Main) operations
+  * a uniquely randomized *BroadcastChannel* *API* to simplify even further the orchestration
+  * one module to rule both *main* and *worker* threads, allowing CDN cache to work best
+  * works out of the box with *MessageChannel* *API* too
+
+One does not need to hook *sabayon* in its project anymore, just load it before any other module only when you think you'll need it and call it a day:
+
+```html
+<!-- top of the page's header -->
+<script type="module">
+import $ from "https://esm.run/sabayon/polyfill";
+$("/polyfill-sw.js");
+</script>
+```
+
+```js
+// top of each worker code
+import "https://esm.run/sabayon/polyfill";
+```
+
+#### When is the polifyll needed?
+
+  * when you don't want to use headers that are compatible with *Safari* and *iOS* too
+  * when you don't want to use special headers at all, not even via a *ServiceWorker*
+
+In all other cases, you probably won't need it
+
+#### How to save the *ServiceWorker* locally?
+
+```sh
+# store the polyfill version in ./public/sw.js
+npx sabayon --polyfill ./public/sw.js
+```
 
 - - -
 
