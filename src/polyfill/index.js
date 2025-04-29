@@ -40,8 +40,13 @@ if (!native) {
     }
 
     const interceptor = method => function (data, ...rest) {
-      const wait = interceptSAB.call(new Set, data);
-      method.call(this, wait ? [...wait, data] : data, ...rest);
+      if (ready) {
+        const wait = interceptSAB.call(new Set, data);
+        method.call(this, wait ? [...wait, data] : data, ...rest);
+      }
+      else {
+        promise.then(() => postMessage(data, ...rest));
+      }
     };
 
     globalThis.postMessage = interceptor(globalThis.postMessage);
@@ -75,8 +80,14 @@ if (!native) {
       else return wait(view, ..._);
     };
 
-    const [UID, SW] = await promise;
-    let ids = Math.random();
+    let UID, SW, ready = false, ids = Math.random();
+
+    promise.then(data => {
+      [UID, SW] = data;
+      ready = true;
+    });
+
+    resgiter = () => promise;
   }
   // Main
   else {

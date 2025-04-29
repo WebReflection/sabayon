@@ -12,12 +12,13 @@
 // Main thread
 import sabayon from 'sabayon/polyfill';
 // provide the ServiceWorker file
-sabayon('/polyfill-sw.js');
+await sabayon('/polyfill-sw.js');
 // that's it 🥳
 
 
 // Worker thread
-import 'sabayon/polyfill';
+import sabayon from 'sabayon/polyfill';
+await sabayon();
 // that's it 🥳
 ```
 
@@ -30,18 +31,34 @@ The new approach is based on:
 
 One does not need to hook *sabayon* in its project anymore, just load it before any other module only when you think you'll need it and call it a day:
 
-```html
-<!-- top of the page's header -->
-<script type="module">
-import $ from "https://esm.run/sabayon/polyfill";
-$("/polyfill-sw.js");
-</script>
+```js
+// Main thread top module as OPTIONAL DEPENDENCY
+if (!crossOriginIsolated) {
+  const { default: sabayon } = await import('https://esm.run/sabayon/polyfill');
+  await sabayon('/sw-polyfill.js');
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// Worker thread top module as OPTIONAL DEPENDENCY
+if (!crossOriginIsolated) {
+  const events = [];
+  const push = events.push.bind(events);
+  addEventListener('message', push);
+  const { default: sabayon } = await import('https://esm.run/sabayon/polyfill');
+  // main sends the first message to the worker to resolve the promise
+  self.dispatchEvent(events.shift());
+  await sabayon();
+  removeEventListener('message', push);
+  // give the rest of the code an event tick to bootstrap
+  // so that possible added listeners won't be lost
+  setTimeout(() => {
+    for (const event of events)
+      self.dispatchEvent(event);
+  });
+}
 ```
 
-```js
-// top of each worker code
-import "https://esm.run/sabayon/polyfill";
-```
 
 #### When is the polifyll needed?
 

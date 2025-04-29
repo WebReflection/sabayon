@@ -1,3 +1,10 @@
+console.time('main bootstrap');
+if (!crossOriginIsolated) {
+  const { default: sabayon } = await import('../../dist/polyfill.js');
+  await sabayon('../sw-polyfill.js');
+}
+console.timeEnd('main bootstrap');
+
 const w = new Worker('./worker.js', { type: 'module' });
 
 w.addEventListener('message', event => {
