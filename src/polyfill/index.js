@@ -17,6 +17,10 @@ if (!native) {
   const [next, resolve] = nextResolver();
   const views = new Map;
 
+  const addListener = (target, ...args) => {
+    target.addEventListener(...args);
+  };
+
   // Web Worker
   if ('importScripts' in globalThis) {
     const find = function (set, array) {
@@ -56,7 +60,8 @@ if (!native) {
     prototype.postMessage = interceptor(prototype.postMessage);
 
     const [bootstrap, promise] = next();
-    addEventListener(
+    addListener(
+      self,
       'message',
       event => {
         event.stopImmediatePropagation();
@@ -147,8 +152,8 @@ if (!native) {
     globalThis.MessageChannel = class MessageChannel extends globalThis.MessageChannel {
       constructor() {
         super();
-        this.port1.addEventListener('message', interceptData);
-        this.port2.addEventListener('message', interceptData);
+        addListener(this.port1, 'message', interceptData);
+        addListener(this.port2, 'message', interceptData);
       }
     };
 
@@ -160,16 +165,18 @@ if (!native) {
       constructor(scriptURL, options) {
         if (!SW) throw new Error('ServiceWorker not registered');
         super(scriptURL, options).postMessage([UID, SW]);
-        this.addEventListener('message', interceptData);
+        addListener(this, 'message', interceptData);
       }
     };
 
     const { notify } = Atomics;
     Atomics.notify = (view, ..._) => {
       const details = views.get(view);
-      if (details) details[1].resolve();
-      else notify(view, ..._);
-      return 0;
+      if (details) {
+        details[1].resolve();
+        return 0;
+      }
+      return notify(view, ..._);
     };
 
     let SW = '';
@@ -187,7 +194,7 @@ if (!native) {
             else location.reload();
           }
           else {
-            w.addEventListener('statechange', () => ready(r), { once: true });
+            addListener(w, 'statechange', () => ready(r), { once: true });
           }
         });
     };
