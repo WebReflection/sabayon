@@ -1,5 +1,7 @@
 // (c) Andrea Giammarchi - MIT
 
+import withResolvers from '@webreflection/utils/with-resolvers';
+
 const ACTION_INIT = 0;
 const ACTION_NOTIFY = 1;
 const ACTION_WAIT = 2;
@@ -14,8 +16,6 @@ const Atomics = /** @type {globalThis.Atomics} */(create($Atomics));
 
 const dispatch = ({ currentTarget, type, origin, lastEventId, source, ports }, data) =>
   currentTarget.dispatchEvent(new MessageEvent(type, { data, origin, lastEventId, source, ports }));
-
-const withResolvers = () => Promise.withResolvers();
 
 let id = 0;
 const views = new Map;

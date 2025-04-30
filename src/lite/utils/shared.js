@@ -1,5 +1,7 @@
 //@ts-check
 
+import withResolvers from '@webreflection/utils/with-resolvers';
+
 import { SharedArrayBuffer } from '../sab.js';
 
 const { isArray } = Array;
@@ -47,11 +49,6 @@ const waitAsync = (view, mitm) => async () => {
     )
   );
   return 'ok';
-};
-
-const withResolvers = () => {
-  //@ts-ignore
-  return Promise.withResolvers();
 };
 
 export {

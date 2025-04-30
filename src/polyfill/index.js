@@ -1,8 +1,9 @@
-import { SharedArrayBuffer, native } from './sab.js';
-
+import withResolvers from '@webreflection/utils/with-resolvers';
 import nextResolver from 'next-resolver';
 
 import BROADCAST_CHANNEL_UID from './bid.js';
+
+import { SharedArrayBuffer, native } from './sab.js';
 
 const { isArray } = Array;
 const { isView } = ArrayBuffer;
@@ -18,30 +19,30 @@ if (!native) {
 
   // Web Worker
   if ('importScripts' in globalThis) {
-    const find = function (array) {
+    const find = function (set, array) {
       for (let i = 0; i < array.length; i++) {
-        const details = interceptSAB.call(this, array[i]);
+        const details = interceptSAB(set, array[i]);
         if (details) return details;
       }
     };
 
-    const interceptSAB = function (data) {
-      if (data && typeof data === 'object' && !this.has(data)) {
-        this.add(data);
+    const interceptSAB = function (set, data) {
+      if (data && typeof data === 'object' && !set.has(data)) {
+        set.add(data);
         if (isView(data)) {
-          if (data.buffer instanceof SharedArrayBuffer) {
+          if (data instanceof Int32Array && data.buffer instanceof SharedArrayBuffer) {
             const id = ids++;
             views.set(data, id);
             return [UID, id, data];
           }
         }
-        else return find.call(this, isArray(data) ? data : values(data));
+        else return find(set, isArray(data) ? data : values(data));
       }
     }
 
     const interceptor = method => function (data, ...rest) {
       if (ready) {
-        const wait = interceptSAB.call(new Set, data);
+        const wait = interceptSAB(new Set, data);
         method.call(this, wait ? [...wait, data] : data, ...rest);
       }
       else {
@@ -58,9 +59,8 @@ if (!native) {
     addEventListener(
       'message',
       event => {
-        resolve(bootstrap, event.data);
         event.stopImmediatePropagation();
-        event.preventDefault();
+        resolve(bootstrap, event.data);
       },
       { once: true }
     );
@@ -71,7 +71,6 @@ if (!native) {
       if (view.buffer instanceof SharedArrayBuffer) {
         const xhr = new XMLHttpRequest;
         xhr.open('POST', `${SW}?sabayon`, false);
-        xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.send(stringify([UID, views.get(view)]));
         view.set(parse(xhr.responseText));
         views.delete(view);
@@ -113,7 +112,7 @@ if (!native) {
       let { data } = event;
       if (isArray(data) && data.at(0) === UID) {
         const [_, id, view, value] = data;
-        views.set(view, [id, Promise.withResolvers()]);
+        views.set(view, [id, withResolvers()]);
         defineProperty(event, 'data', { value });
       }
     };
