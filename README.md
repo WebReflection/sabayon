@@ -6,7 +6,7 @@
 
 ### 📢 A new Polyfill approach
 
-`sabayon/polyfill` and its `sabayon/polyfill-sw-listeners` plus `sabayon/polyfill-sw` just landed, with a whole new *polyfill* like approach for the `Atomics.wait` **synchronous** dance between a *Worker* and its *Main* thread.
+`sabayon/polyfill` and its `sabayon/polyfill-sw-listeners` plus `sabayon/polyfill-sw` just landed, with a whole new *polyfill* like approach for both `Atomics.wait` **synchronous** dance and `Atomics.waitAsync` **asynchronous** operation between a *Worker* and its *Main* thread.
 
 ```js
 // Main thread

@@ -34,9 +34,9 @@ const test = self => {
   console.assert(view[0] === 1);
 };
 
-test(self);
-
 addEventListener('message', ({ data, ports: [channel] }) => {
   test(channel);
   postMessage('ok');
 });
+
+test(self);

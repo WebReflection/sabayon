@@ -1,0 +1,1 @@
+let a="";var e=(...e)=>new Promise((async s=>{const t="/__sabayon_wait_async.js";if(!a){const e=fetch(t,{method:"HEAD"}).then((a=>a.ok),(()=>!1));a=await e?t:"data:application/javascript,onmessage%3De%3D%3EpostMessage(!Atomics.wait(...e.data))"}const o=new Worker(a);o.onmessage=()=>{o.terminate(),s("ok")},o.postMessage(e)}));export{e as default};

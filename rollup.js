@@ -74,7 +74,7 @@ export default [
     plugins: [nodeResolve()].concat(process.env.NO_MIN ? [] : [terser()]),
     output: {
       esModule: true,
-      file: './dist/polyfill.js',
+      dir: './dist/',
     }
   },
   {

@@ -5,7 +5,7 @@
     "sabayon": "cli.cjs"
   },
   "scripts": {
-    "build": "rollup --config rollup.js && node cli.cjs ./test/sw.js && node cli.cjs --polyfill ./test/sw-polyfill.js",
+    "build": "rm dist/*.js && rollup --config rollup.js && mv dist/index.js ./dist/polyfill.js && node cli.cjs ./test/sw.js && node cli.cjs --polyfill ./test/sw-polyfill.js",
     "coi": "mini-coi .",
     "server": "static-handler ."
   },
@@ -26,8 +26,8 @@
   "type": "module",
   "exports": {
     "./main": "./src/main.js",
-    "./polyfill": "./dist/polyfill.js",
-    "./polyfill-sw": "./dist/polyfill-sw.js",
+    "./polyfill": "./src/polyfill/index.js",
+    "./polyfill-sw": "./src/polyfill/sw.js",
     "./polyfill-sw-listeners": "./src/polyfill/sw-listeners.js",
     "./worker": "./src/worker.js",
     "./shared": "./src/shared.js",

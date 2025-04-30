@@ -65,19 +65,46 @@ if (!native) {
       { once: true }
     );
 
-    const { wait } = Atomics;
+    // <Atomics Patch>
+    let { wait, waitAsync } = Atomics;
+
     const { parse, stringify } = JSON;
-    Atomics.wait = (view, ..._) => {
-      if (view.buffer instanceof SharedArrayBuffer) {
-        const xhr = new XMLHttpRequest;
-        xhr.open('POST', `${SW}?sabayon`, false);
-        xhr.send(stringify([UID, views.get(view)]));
-        view.set(parse(xhr.responseText));
-        views.delete(view);
-        return 'ok';
-      }
-      else return wait(view, ..._);
+
+    const Async = value => ({ value, async: true });
+
+    const Request = (view, sync) => {
+      const xhr = new XMLHttpRequest;
+      xhr.open('POST', `${SW}?sabayon`, sync);
+      xhr.send(stringify([UID, views.get(view)]));
+      return xhr;
     };
+
+    const Response = (view, xhr) => {
+      view.set(parse(xhr.responseText));
+      views.delete(view);
+      return 'ok';
+    };
+
+    Atomics.wait = (view, ..._) => views.has(view) ?
+      Response(view, Request(view, false)) :
+      wait(view, ..._)
+    ;
+
+    Atomics.waitAsync = (view, ..._) => {
+      if (views.has(view)) {
+        const { promise, resolve } = withResolvers();
+        const xhr = Request(view, true);
+        xhr.onloadend = () => resolve(Response(view, xhr));
+        return Async(promise);
+      }
+      return waitAsync ?
+        waitAsync(view, ..._) :
+        Async(import('./wait-async.js').then(
+          ({ default: $ }) => $(view, ..._)
+        ))
+      ;
+    };
+    // </Atomics Patch>
 
     let UID, SW, ready = false, ids = Math.random();
 
