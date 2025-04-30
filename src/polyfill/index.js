@@ -9,12 +9,21 @@ const { isArray } = Array;
 const { isView } = ArrayBuffer;
 const { defineProperty, values } = Object;
 
-let register = () => {};
+const [next, resolve] = nextResolver();
+let [bootstrap, promise] = next();
 
-if (!native) {
+/**
+ * @callback sabayon
+ * @param {string|URL} [serviceWorkerURL] - The URL of the service worker to register on the main thread.
+ * @returns {Promise<void>} - A promise that resolves when the polyfill is ready.
+ */
+
+let register = /** @type {sabayon} */(() => promise);
+
+if (native) resolve(bootstrap);
+else {
   globalThis.SharedArrayBuffer = SharedArrayBuffer;
 
-  const [next, resolve] = nextResolver();
   const views = new Map;
 
   const addListener = (target, ...args) => {
@@ -23,31 +32,31 @@ if (!native) {
 
   // Web Worker
   if ('importScripts' in globalThis) {
-    const find = function (set, array) {
-      for (let i = 0; i < array.length; i++) {
-        const details = interceptSAB(set, array[i]);
-        if (details) return details;
+    const intercept = (set, data, view) => {
+      if (view && typeof view === 'object' && !set.has(view)) {
+        set.add(view);
+        if (isView(view)) {
+          // avoid DataView or other views to be considered for waiting
+          if (view instanceof Int32Array && view.buffer instanceof SharedArrayBuffer) {
+            const id = ids++;
+            views.set(view, id);
+            return [UID, id, view, data];
+          }
+        }
+        else {
+          const array = isArray(view) ? view : values(view);
+          for (let i = 0; i < array.length; i++) {
+            const details = intercept(set, data, array[i]);
+            if (details) return details;
+          }
+        }
       }
     };
 
-    const interceptSAB = function (set, data) {
-      if (data && typeof data === 'object' && !set.has(data)) {
-        set.add(data);
-        if (isView(data)) {
-          if (data instanceof Int32Array && data.buffer instanceof SharedArrayBuffer) {
-            const id = ids++;
-            views.set(data, id);
-            return [UID, id, data];
-          }
-        }
-        else return find(set, isArray(data) ? data : values(data));
-      }
-    }
-
-    const interceptor = method => function (data, ...rest) {
+    const interceptor = method => function postMessage(data, ...rest) {
       if (ready) {
-        const wait = interceptSAB(new Set, data);
-        method.call(this, wait ? [...wait, data] : data, ...rest);
+        const details = intercept(new Set, data, data);
+        method.call(this, (details || data), ...rest);
       }
       else {
         promise.then(() => postMessage(data, ...rest));
@@ -59,7 +68,6 @@ if (!native) {
     const { prototype } = globalThis.MessagePort;
     prototype.postMessage = interceptor(prototype.postMessage);
 
-    let [bootstrap, promise] = next();
     addListener(
       self,
       'message',
@@ -71,16 +79,15 @@ if (!native) {
     );
 
     // <Atomics Patch>
-    let { wait, waitAsync } = Atomics;
-
-    const { parse, stringify } = JSON;
+    const { wait } = Atomics;
+    const { parse } = JSON;
 
     const Async = value => ({ value, async: true });
 
     const Request = (view, sync) => {
       const xhr = new XMLHttpRequest;
       xhr.open('POST', `${SW}?sabayon`, sync);
-      xhr.send(stringify([UID, views.get(view)]));
+      xhr.send(`["${UID}",${views.get(view)}]`);
       return xhr;
     };
 
@@ -102,23 +109,16 @@ if (!native) {
         xhr.onloadend = () => resolve(Response(view, xhr));
         return Async(promise);
       }
-      return waitAsync ?
-        waitAsync(view, ..._) :
-        Async(import('./wait-async.js').then(
-          ({ default: $ }) => $(PATCH, view, ..._)
-        ))
-      ;
+      return wait(view, ..._);
     };
     // </Atomics Patch>
 
-    let UID, SW, PATCH, ready = false, ids = Math.random();
+    let UID, SW, ready = false, ids = Math.random();
 
     promise = promise.then(data => {
-      [UID, SW, PATCH] = data;
+      [UID, SW] = data;
       ready = true;
     });
-
-    register = () => promise;
   }
   // Main
   else {
@@ -127,15 +127,16 @@ if (!native) {
     const bc = new BroadcastChannel(BROADCAST_CHANNEL_UID);
     bc.onmessage = async event => {
       const [swid, wid, vid] = event.data;
-      if (wid !== UID) return;
-      for (const [view, [id, wr]] of views) {
-        if (id === vid) {
-          await wr.promise;
-          views.delete(view);
-          let length = view.length;
-          while (length-- && !view[length]);
-          bc.postMessage([swid, view.slice(0, length + 1)]);
-          break;
+      if (wid === UID) {
+        for (const [view, [id, wr]] of views) {
+          if (id === vid) {
+            await wr.promise;
+            views.delete(view);
+            let length = view.length;
+            while (length-- && !view[length]);
+            bc.postMessage([swid, view.slice(0, length + 1)]);
+            break;
+          }
         }
       }
     };
@@ -164,7 +165,7 @@ if (!native) {
        */
       constructor(scriptURL, options) {
         if (!SW) throw new Error('ServiceWorker not registered');
-        super(scriptURL, options).postMessage([UID, SW, PATCH]);
+        super(scriptURL, options).postMessage([UID, SW]);
         addListener(this, 'message', interceptData);
       }
     };
@@ -180,19 +181,28 @@ if (!native) {
     };
 
     let SW = '';
-    let PATCH = '';
     let serviceWorker = null;
 
-    const activate = ({ serviceWorker: s }, id) => {
+    /**
+     * @param {ServiceWorkerContainer} swc
+     * @param {RegistrationOptions} [options]
+     */
+    const activate = (swc, options) => {
       let w, c = true;
-      s.getRegistration(SW)
-        .then(r => (r ?? s.register(SW)))
+      swc.getRegistration(SW)
+        .then(r => (r ?? swc.register(SW, options)))
         .then(function ready(r) {
-          c = c && !!s.controller;
+          const { controller } = swc;
+          c = c && !!controller;
           w = (r.installing || r.waiting || r.active);
           if (w.state === 'activated') {
-            if (c) resolve(id);
-            else location.reload();
+            if (c) {
+              // allow ServiceWorker swap on different URL
+              if (controller.scriptURL === SW)
+                return resolve(bootstrap);
+              r.unregister();
+            }
+            location.reload();
           }
           else {
             addListener(w, 'statechange', () => ready(r), { once: true });
@@ -200,19 +210,16 @@ if (!native) {
         });
     };
 
-    register = (serviceWorkerURL, waitAsyncPatch = '/__sabayon_wait_async.js') => {
+    register = /** @type {sabayon} */((serviceWorkerURL, options) => {
       if (!serviceWorker) {
-        const { href } = location;
-        SW = new URL(serviceWorkerURL, href).href;
-        PATCH = new URL(waitAsyncPatch, href).href;
-        const [id, promise] = next();
-        activate(navigator, id);
+        // resolve the fully qualified URL for Blob based workers
+        SW = new URL(serviceWorkerURL, location.href).href;
+        activate(navigator.serviceWorker, options);
         serviceWorker = promise;
       }
       return serviceWorker;
-    };
+    });
   }
 }
-
 
 export default register;

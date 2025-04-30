@@ -11,8 +11,8 @@
 ```js
 // Main thread
 import sabayon from 'sabayon/polyfill';
-// provide the ServiceWorker file
-await sabayon('/polyfill-sw.js');
+// provide the ServiceWorker file (+ optional RegistrationOptions)
+await sabayon('/polyfill-sw.js'/*[, options]*/);
 // that's it 🥳
 
 
