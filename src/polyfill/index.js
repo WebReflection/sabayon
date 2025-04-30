@@ -9,7 +9,7 @@ const { isArray } = Array;
 const { isView } = ArrayBuffer;
 const { defineProperty, values } = Object;
 
-let resgiter = () => {};
+let register = () => {};
 
 if (!native) {
   globalThis.SharedArrayBuffer = SharedArrayBuffer;
@@ -59,7 +59,7 @@ if (!native) {
     const { prototype } = globalThis.MessagePort;
     prototype.postMessage = interceptor(prototype.postMessage);
 
-    const [bootstrap, promise] = next();
+    let [bootstrap, promise] = next();
     addListener(
       self,
       'message',
@@ -105,20 +105,20 @@ if (!native) {
       return waitAsync ?
         waitAsync(view, ..._) :
         Async(import('./wait-async.js').then(
-          ({ default: $ }) => $(view, ..._)
+          ({ default: $ }) => $(PATCH, view, ..._)
         ))
       ;
     };
     // </Atomics Patch>
 
-    let UID, SW, ready = false, ids = Math.random();
+    let UID, SW, PATCH, ready = false, ids = Math.random();
 
-    promise.then(data => {
-      [UID, SW] = data;
+    promise = promise.then(data => {
+      [UID, SW, PATCH] = data;
       ready = true;
     });
 
-    resgiter = () => promise;
+    register = () => promise;
   }
   // Main
   else {
@@ -164,7 +164,7 @@ if (!native) {
        */
       constructor(scriptURL, options) {
         if (!SW) throw new Error('ServiceWorker not registered');
-        super(scriptURL, options).postMessage([UID, SW]);
+        super(scriptURL, options).postMessage([UID, SW, PATCH]);
         addListener(this, 'message', interceptData);
       }
     };
@@ -180,6 +180,7 @@ if (!native) {
     };
 
     let SW = '';
+    let PATCH = '';
     let serviceWorker = null;
 
     const activate = ({ serviceWorker: s }, id) => {
@@ -199,16 +200,19 @@ if (!native) {
         });
     };
 
-    resgiter = src => {
+    register = (serviceWorkerURL, waitAsyncPatch = '/__sabayon_wait_async.js') => {
       if (!serviceWorker) {
-        SW = new URL(src, location.href).href;
+        const { href } = location;
+        SW = new URL(serviceWorkerURL, href).href;
+        PATCH = new URL(waitAsyncPatch, href).href;
         const [id, promise] = next();
         activate(navigator, id);
         serviceWorker = promise;
       }
       return serviceWorker;
-    }
+    };
   }
 }
 
-export default resgiter;
+
+export default register;

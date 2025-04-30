@@ -1,0 +1,1 @@
+let e="";var a=(a,...t)=>new Promise((async s=>{if(!e){const t=!!a&&fetch(a,{method:"HEAD"}).then((e=>e.ok),(()=>!1));e=await t?a:"data:application/javascript,onmessage%3De%3D%3EpostMessage(!Atomics.wait(...e.data))"}const o=new Worker(e);o.onmessage=()=>{o.terminate(),s("ok")},o.postMessage(t)}));export{a as default};
