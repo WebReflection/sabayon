@@ -10,7 +10,7 @@ const w = new Worker('./worker.js', { type: 'module' });
 w.addEventListener('message', event => {
   const { data } = event;
   if (typeof data === 'string')
-    document.body.textContent = data;
+    document.body.append(data);
   else {
     console.log('Main', data);
     data.view[0] = 1;

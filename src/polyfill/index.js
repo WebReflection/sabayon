@@ -87,6 +87,7 @@ else {
     const Request = (view, sync) => {
       const xhr = new XMLHttpRequest;
       xhr.open('POST', `${SW}?sabayon`, sync);
+      xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.send(`["${UID}",${views.get(view)}]`);
       return xhr;
     };

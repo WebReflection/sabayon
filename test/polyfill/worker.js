@@ -40,3 +40,5 @@ addEventListener('message', ({ data, ports: [channel] }) => {
 });
 
 test(self);
+test(self);
+test(self);
