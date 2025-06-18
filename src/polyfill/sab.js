@@ -15,6 +15,7 @@ catch (_) {
           //@ts-ignore due valid property not recognized
           return super.resizable;
         }
+        /** @param {number} newLength */
         grow(newLength) {
           //@ts-ignore due valid method not recognized
           super.resize(newLength);

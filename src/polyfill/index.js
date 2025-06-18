@@ -69,7 +69,7 @@ else {
     prototype.postMessage = interceptor(prototype.postMessage);
 
     addListener(
-      self,
+      globalThis,
       'message',
       event => {
         event.stopImmediatePropagation();
