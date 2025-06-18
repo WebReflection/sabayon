@@ -21,6 +21,7 @@ const sb = new SharedArrayBuffer(4);
 const view = new Int32Array(sb);
 
 const test = self => {
+  debugger;
   view[0] = 0;
 
   console.time('roundtrip');
@@ -35,10 +36,11 @@ const test = self => {
 };
 
 addEventListener('message', ({ data, ports: [channel] }) => {
+  debugger;
   test(channel);
   postMessage('ok');
 });
 
-test(self);
-test(self);
-test(self);
+test(globalThis);
+test(globalThis);
+test(globalThis);
