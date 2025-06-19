@@ -23,7 +23,7 @@ export const fetch = event => {
         for (const client of await clients.matchAll())
           client.postMessage(data);
       })
-      .then(value => new Response(`[${value.join(',')}]`, r.headers))
+      .then(value => new Response(`[${value.join(',')}]`))
     );
   }
 };
