@@ -1,11 +1,13 @@
 // (c) Andrea Giammarchi - MIT
 
+import { SharedArrayBuffer as SAB, native } from '@webreflection/utils/shared-array-buffer';
+
 import { parse, reviver } from '@ungap/raw-json';
 
 import {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
-  ArrayBuffer, Atomics,
+  Atomics,
 
   actionNotify, actionWait,
   getData, postData,
@@ -29,19 +31,17 @@ let {
 
 let bootstrapping = true;
 let ignore = ignoreDirect;
-let polyfill = false;
+let polyfill = !native;
 
 const ready = withResolvers();
 
-try {
-  new SharedArrayBuffer(4);
-
+if (native) {
   if (!Atomics.waitAsync)
     Atomics.waitAsync = waitAsyncPatch;
 
   ready.resolve();
 }
-catch (_) {
+else {
   const $postMessage = postMessage;
   const $addEventListener = addEventListener;
 
@@ -50,12 +50,11 @@ catch (_) {
   let CHANNEL = '';
   let SERVICE_WORKER = '';
 
-  SharedArrayBuffer = class extends ArrayBuffer {}
+  SharedArrayBuffer = SAB;
   BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
   ignore = ignorePatch;
-  polyfill = true;
 
   Atomics.notify = (view, index) => {
     const [id] = getData(view);

@@ -2,7 +2,7 @@
 
 import { SharedArrayBuffer, native } from '@webreflection/utils/shared-array-buffer';
 import { handler } from './utils/handler.js';
-import { asDescriptorValue, create, waitAsync } from './utils/shared.js';
+import { asDescriptorValue, create } from './utils/shared.js';
 
 import mitm from './utils/mitm.js';
 

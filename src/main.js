@@ -1,9 +1,11 @@
 // (c) Andrea Giammarchi - MIT
 
+import { SharedArrayBuffer as SAB, native } from '@webreflection/utils/shared-array-buffer';
+
 import {
   ACTION_INIT, ACTION_NOTIFY, ACTION_WAIT, ACTION_SW,
 
-  ArrayBuffer, Atomics,
+  Atomics,
 
   actionNotify, actionWait,
   getData, postData,
@@ -23,13 +25,11 @@ let {
 } = globalThis;
 
 let ignore = ignoreDirect;
-let polyfill = false;
+let polyfill = !native;
 
 const asModule = options => ({ ...options, type: 'module' });
 
-try {
-  new SharedArrayBuffer(4);
-
+if (native) {
   Worker = class extends Worker {
     constructor(url, options) {
       super(url, asModule(options));
@@ -39,7 +39,7 @@ try {
   if (!Atomics.waitAsync)
     Atomics.waitAsync = waitAsyncPatch;
 }
-catch (_) {
+else {
   const CHANNEL = crypto.randomUUID();
 
   const sync = new Map;
@@ -83,7 +83,6 @@ catch (_) {
   };
 
   ignore = ignorePatch;
-  polyfill = true;
 
   Atomics.notify = (view, index) => {
     const [id, worker] = getData(view);
@@ -100,7 +99,7 @@ catch (_) {
     return { value };
   };
 
-  SharedArrayBuffer = class extends ArrayBuffer {}
+  SharedArrayBuffer = SAB;
   BigInt64Array = extend(BigInt64Array, SharedArrayBuffer);
   Int32Array = extend(Int32Array, SharedArrayBuffer);
 
