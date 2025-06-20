@@ -1,4 +1,4 @@
-import { SharedArrayBuffer } from '../sab.js';
+import { SharedArrayBuffer } from '@webreflection/utils/shared-array-buffer';
 import { defineProperty, isChannel, setPrototypeOf } from './shared.js';
 
 const toBeNotified = new Map;

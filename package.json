@@ -49,7 +49,7 @@
   "homepage": "https://github.com/WebReflection/sabayon#readme",
   "dependencies": {
     "@ungap/raw-json": "^0.4.3",
-    "@webreflection/utils": "^0.1.0",
+    "@webreflection/utils": "^0.1.1",
     "coincident": "^3.0.5",
     "next-resolver": "^0.1.3"
   }

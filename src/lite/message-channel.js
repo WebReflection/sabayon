@@ -1,4 +1,4 @@
-import { native } from './sab.js';
+import { native } from '@webreflection/utils/shared-array-buffer';
 import { handler } from './utils/handler.js';
 
 let { MessageChannel: MC } = globalThis;

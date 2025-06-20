@@ -1,4 +1,4 @@
-import { SharedArrayBuffer } from '../sab.js';
+import { SharedArrayBuffer } from '@webreflection/utils/shared-array-buffer';
 import { isArray, isChannel, isView, stop, withResolvers } from './shared.js';
 
 const find = (data, path, set) => {

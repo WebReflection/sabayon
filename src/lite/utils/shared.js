@@ -2,7 +2,7 @@
 
 import withResolvers from '@webreflection/utils/with-resolvers';
 
-import { SharedArrayBuffer } from '../sab.js';
+import { SharedArrayBuffer } from '@webreflection/utils/shared-array-buffer';
 
 const { isArray } = Array;
 const { isView } = ArrayBuffer;

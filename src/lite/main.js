@@ -1,6 +1,6 @@
 //@ts-check
 
-import { SharedArrayBuffer, native } from './sab.js';
+import { SharedArrayBuffer, native } from '@webreflection/utils/shared-array-buffer';
 import { handler } from './utils/handler.js';
 import { asDescriptorValue, create, waitAsync } from './utils/shared.js';
 

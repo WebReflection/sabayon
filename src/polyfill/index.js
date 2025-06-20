@@ -3,7 +3,7 @@ import nextResolver from 'next-resolver';
 
 import BROADCAST_CHANNEL_UID from './bid.js';
 
-import { SharedArrayBuffer, native } from './sab.js';
+import { SharedArrayBuffer, native } from '@webreflection/utils/shared-array-buffer';
 
 const { isArray } = Array;
 const { isView } = ArrayBuffer;
