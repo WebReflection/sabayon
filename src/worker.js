@@ -1,5 +1,11 @@
 // (c) Andrea Giammarchi - MIT
 
+if (!Array.prototype.at) {
+  Array.prototype.at = function (index) {
+    return index < 0 ? this[this.length + index] : this[index];
+  };
+}
+
 import { SharedArrayBuffer as SAB, native } from '@webreflection/utils/shared-array-buffer';
 
 import { parse, reviver } from '@ungap/raw-json';

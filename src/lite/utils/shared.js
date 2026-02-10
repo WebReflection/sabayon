@@ -1,5 +1,6 @@
 //@ts-check
 
+import '@ungap/with-resolvers';
 import withResolvers from '@webreflection/utils/with-resolvers';
 
 import { SharedArrayBuffer } from '@webreflection/utils/shared-array-buffer';

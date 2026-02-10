@@ -1,5 +1,12 @@
 // (c) Andrea Giammarchi - MIT
 
+if (!Array.prototype.at) {
+  Array.prototype.at = function (index) {
+    return index < 0 ? this[this.length + index] : this[index];
+  };
+}
+
+import '@ungap/with-resolvers';
 import withResolvers from '@webreflection/utils/with-resolvers';
 
 const ACTION_INIT = 0;

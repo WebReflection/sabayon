@@ -1,3 +1,9 @@
+if (!Array.prototype.at) {
+  Array.prototype.at = function (index) {
+    return index < 0 ? this[this.length + index] : this[index];
+  };
+}
+
 import { SharedArrayBuffer } from '@webreflection/utils/shared-array-buffer';
 import { isArray, isChannel, isView, stop, withResolvers } from './shared.js';
 
